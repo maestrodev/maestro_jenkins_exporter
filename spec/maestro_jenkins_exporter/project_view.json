@@ -1,0 +1,15 @@
+{
+    "description" : "Project View Description",
+    "jobs" : [
+        {
+            "name" : "Test Job",
+            "url" : "http://localhost:8080/job/Test%20Job/",
+            "color" : "grey"
+        }
+    ],
+    "name" : "Project View",
+    "property" : [
+
+    ],
+    "url" : "http://localhost:8080/view/Group%20View/view/Project%20View/"
+}

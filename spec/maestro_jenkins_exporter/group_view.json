@@ -1,0 +1,17 @@
+{
+    "description" : "A group.",
+    "jobs" : [
+
+    ],
+    "name" : "Group View",
+    "property" : [
+
+    ],
+    "url" : "http://localhost:8080/view/Group%20View/",
+    "views" : [
+        {
+            "name" : "Project View",
+            "url" : "http://localhost:8080/view/Group%20View/view/Project%20View/"
+        }
+    ]
+}

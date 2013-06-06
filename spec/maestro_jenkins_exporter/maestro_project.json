@@ -1,0 +1,79 @@
+{
+    "description": "Project View Description",
+    "name": "Project View",
+    "compositions": [
+        {
+            "agent_facts": {},
+            "agent_pool_id": null,
+            "composition_tasks": [
+                {
+                    "name": "jenkins plugin",
+                    "options": {
+                        "host": {
+                            "required": true,
+                            "type": "String",
+                            "value": "localhost"
+                        },
+                        "port": {
+                            "required": true,
+                            "type": "Integer",
+                            "value": "8080"
+                        },
+                        "web_path": {
+                            "required": false,
+                            "type": "String",
+                            "value": ""
+                        },
+                        "use_ssl": {
+                            "required": true,
+                            "type": "Boolean",
+                            "value": false
+                        },
+                        "username": {
+                            "required": false,
+                            "type": "String",
+                            "value": "admin"
+                        },
+                        "password": {
+                            "required": false,
+                            "type": "Password",
+                            "value": "admin"
+                        },
+                        "job": {
+                            "required": true,
+                            "type": "String",
+                            "value": "Test Job"
+                        },
+                        "override_existing": {
+                            "required": true,
+                            "type": "Boolean",
+                            "value": false
+                        },
+                        "scm_url": {
+                            "required": false,
+                            "type": "Url",
+                            "value": ""
+                        },
+                        "steps": {
+                            "required": true,
+                            "type": "Array",
+                            "value": null
+                        }
+                    },
+                    "position": 1,
+                    "sources": [ ]
+                }
+            ],
+            "description": "Cut an artifact release (using a local Git repository for demonstration)",
+            "fail_type": "fast",
+            "fail_type_id": 1,
+            "name": "Test Job",
+            "on_error_composition": null,
+            "on_error_id": null,
+            "reuse_agent": true,
+            "schedule": "",
+            "sources": [],
+            "state": null
+        }
+    ]
+}

@@ -1,0 +1,43 @@
+{
+    "assignedLabels" : [
+        {
+
+        }
+    ],
+    "mode" : "NORMAL",
+    "nodeDescription" : "the master Jenkins node",
+    "nodeName" : "",
+    "numExecutors" : 2,
+    "description" : null,
+    "jobs" : [
+        {
+            "name" : "Test Job",
+            "url" : "http://localhost:8080/job/Test%20Job/",
+            "color" : "grey"
+        }
+    ],
+    "overallLoad" : {
+
+    },
+    "primaryView" : {
+        "name" : "All",
+        "url" : "http://localhost:8080/"
+    },
+    "quietingDown" : false,
+    "slaveAgentPort" : 0,
+    "unlabeledLoad" : {
+
+    },
+    "useCrumbs" : true,
+    "useSecurity" : true,
+    "views" : [
+        {
+            "name" : "All",
+            "url" : "http://localhost:8080/"
+        },
+        {
+            "name" : "Group View",
+            "url" : "http://localhost:8080/view/Group%20View/"
+        }
+    ]
+}
