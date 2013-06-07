@@ -27,50 +27,57 @@ describe MaestroJenkinsExporter::Exporter do
   end
 
 
-  describe 'jenkins query mechanism' do
+  describe 'export' do
 
-    it 'should retrieve groups from the top-level views' do
-      view = double("Client")
-      view.stub(:list => [ 'All', 'Group View'])
-      @client.should_receive(:view).and_return(view)
-      groups = subject.list_groups
-      groups.should == [ 'Group View' ]
+    before(:each) do
+      @view = double("View")
+      @view.stub(:list => [ 'All', 'Group View'])
+      @view_details = canned_response('group_view.json')
+      @view.should_receive(:get_config).with('Group View').and_return(@view_details)
+      @client.stub(:view => @view)
     end
 
-    it 'should retrieve a list of projects for a particular group' do
-      @client.should_receive(:api_get_request).with('/view/Group View').and_return(canned_response('group_view.json'))
-      subject.list_projects_from_jenkins('Group View').should == [ 'Project View' ]
+    it 'should add groups to LuCEE' do
+      group = { 'name' => 'Group View', 'description' => 'A group.'}
+      subject.should_receive(:add_group_to_lucee).with(group).and_return(group)
+      subject.should_receive(:export_projects).with(@view_details['views'], group)
+      subject.export
     end
 
-    it 'should retrieve the project details' do
-      @client.should_receive(:api_get_request).with('/view/Group View/view/Project View').and_return(canned_response('project_view.json'))
-      subject.project_details('Group View', 'Project View').to_json.should be_json_eql load_json 'project_view.json'
+    it 'should add projects to lucee' do
+      group = { 'name' => 'Group View', 'description' => 'A group.'}
+      subject.should_receive(:add_group_to_lucee).with(group).and_return(group)
+      project_view_details = canned_response('project_view.json')
+      @client.should_receive(:api_get_request).with('/view/Group View/view/Project View').and_return(project_view_details)
+      project = {'name' => 'Project View', 'description' => 'Project View Description'}
+      # this validates the translation from view details to a maestro project
+      subject.should_receive(:project_from_view).with(project_view_details).and_call_original
+      subject.should_receive(:add_project_to_lucee).with(project).and_call_original
+      subject.should_receive(:export_compositions).with(project_view_details['jobs'], project)
+      subject.export
     end
 
-    it 'should retrieve job details' do
+    it 'should add compositions to lucee' do
+      group = { 'name' => 'Group View', 'description' => 'A group.'}
+      subject.should_receive(:add_group_to_lucee).with(group).and_return(group)
+      project_view_details = canned_response('project_view.json')
+      @client.should_receive(:api_get_request).with('/view/Group View/view/Project View').and_return(project_view_details)
+      project = {'name' => 'Project View', 'description' => 'Project View Description'}
+      # this validates the translation from view details to a maestro project
+      subject.should_receive(:project_from_view).with(project_view_details).and_call_original
+      subject.should_receive(:add_project_to_lucee).with(project).and_call_original
+      subject.should_receive(:export_compositions).with(project_view_details['jobs'], project).and_call_original
+      job_details = canned_response('jenkins_job.json')
       job = double("Job")
-      job.stub(:list_details => canned_response('jenkins_job.json'))
-      @client.should_receive(:job).and_return(job)
-      subject.job_details('Test Job').to_json.should be_json_eql load_json 'jenkins_job.json'
+      job.should_receive(:list_details).with("Test Job").and_return(job_details)
+      @client.stub(:job => job)
+
+      subject.export
+
+
     end
 
   end
-
-  describe 'composition creation' do
-
-    it 'should create a maestro project import data structure' do
-      job = double("Job")
-      job.stub(:list_details => canned_response('jenkins_job.json'))
-      @client.should_receive(:job).and_return(job)
-
-      subject.project_from_view('Group View', canned_response('project_view.json')).should be_json_eql load_json 'maestro_project.json'
-    end
-
-
-  end
-
-
-
 
 
 end

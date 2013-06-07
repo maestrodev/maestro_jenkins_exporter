@@ -1,0 +1,119 @@
+{
+    "name": "jenkins plugin",
+    "description": "Run A Set Of Work Steps In Jenkins",
+    "plugin":
+    {
+        "name": "jenkins plugin",
+        "type": "ruby",
+        "path": "/home/maestro/.maestro/plugins/installed/maestro-jenkins-plugin-1.4.4-bin.zip",
+        "error": false,
+        "version": "1.4.4-2f7aac",
+        "description": "Run A Set Of Work Steps In Jenkins",
+        "enabled": true,
+        "deleted": false,
+        "author": "Kelly Plummer",
+        "checksum": "5b1f72670bf6334bc48908fd37c8011b",
+        "id": 12,
+        "updatedAt": null,
+        "createdAt": null
+    },
+    "options": {
+        "host": {
+            "type": "String",
+            "required": true,
+            "value": "localhost",
+            "description": "Hostname Of The Jenkins Server",
+            "options": null
+        },
+        "port": {
+            "type": "Integer",
+            "required": false,
+            "value": 8080,
+            "description": "Port Jenkins Is Running On",
+            "options": null
+        },
+        "job": {
+            "type": "String",
+            "required": true,
+            "value": "",
+            "description": "Name Of The Jenkins Job",
+            "options": null
+        },
+        "username": {
+            "type": "String",
+            "required": false,
+            "value": "",
+            "description": "Username for jenkins server",
+            "options": null
+        },
+        "password": {
+            "type": "Password",
+            "required": false,
+            "value": "",
+            "description": "Password for jenkins server",
+            "options": null
+        },
+        "use_ssl": {
+            "type": "Boolean",
+            "required": true,
+            "value": false,
+            "description": "use ssl connection",
+            "options": null
+        },
+        "web_path": {
+            "type": "String",
+            "required": false,
+            "value": "",
+            "description": "path of the jenkins application in the server",
+            "options": null
+        },
+        "scm_url": {
+            "type": "Url",
+            "required": false,
+            "value": "",
+            "description": "Url Of The Source Code Repository",
+            "options": null
+        },
+        "parameters": {
+            "type": "Array",
+            "required": false,
+            "value": [],
+            "description": "Parameters to pass to the job. Name=value formatted.",
+            "options": null
+        },
+        "user_defined_axes": {
+            "type": "Array",
+            "required": false,
+            "value": [],
+            "description": "User defined axes used for a configuration matrix project",
+            "options": null
+        },
+        "label_axes": {
+            "type": "Array",
+            "required": false,
+            "value": [],
+            "description": "Labels for a configuration matrix project",
+            "options": null
+        },
+        "steps": {
+            "type": "Array",
+            "required": false,
+            "value": [],
+            "description": "Set Of Steps To Be Executed By Jenkins",
+            "options": null
+        },
+        "override_existing": {
+            "type": "Boolean",
+            "required": true,
+            "value": false,
+            "description": "Overwrite existing jobs, or create if it does not exist",
+            "options": null
+        }
+    },
+    "position": 1,
+    "toolName": ["Build"],
+    "type":
+        "remote",
+    "createdAt": null,
+    "id": 31,
+    "updatedAt": null}

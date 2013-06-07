@@ -19,6 +19,8 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
 
   gem.add_dependency('jenkins_api_client')
+  gem.add_dependency('rest-client')
+  gem.add_dependency('httparty')
   gem.add_development_dependency 'rspec', '~> 2.13.0'
   gem.add_development_dependency 'json_spec', '~> 1.1.1'
 end

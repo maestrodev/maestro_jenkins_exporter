@@ -1,0 +1,37 @@
+{"name": "Test Jenkins", "description":
+    "Test Jenkins",
+    "tags": [],
+    "parentName": "None",
+    "enabled": true,
+    "parentId": null,
+    "compositionTasks": [],
+    "schedule": "",
+    "failTypeId": 1,
+    "onErrorId": 0,
+    "agentFacts": {},
+    "agentPoolId": 1,
+    "failOnCancel": false,
+    "onErrorComposition": null,
+    "failType": "fast",
+    "id": 251,
+    "updatedAt": "2013-06-07T13:20:17-07:00",
+    "createdAt": "2013-06-07T13:20:17-07:00",
+    "values": {
+        "task_31_1": {
+            "host": "localhost",
+            "port": 8080,
+            "job": "Test Job",
+            "username": "username",
+            "password": "password",
+            "web_path": "/",
+            "scm_url": "",
+            "use_ssl": true,
+            "override_existing": false,
+            "parameters": [],
+            "user_defined_axes": [],
+            "label_axes": [],
+            "steps": [],
+            "position": 1,
+            "source": "-1"
+        }
+    }}

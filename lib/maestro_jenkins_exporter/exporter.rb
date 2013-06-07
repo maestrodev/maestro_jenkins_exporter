@@ -8,6 +8,21 @@ module MaestroJenkinsExporter
       @options = options
     end
 
+
+    def export
+      # First export the top-level views and import into lucee groups.
+      views = list_group_views
+      views.each do |view|
+        view_details = client.view.get_config(view)
+        group = add_group_to_lucee(group_from_view(view_details))
+        # Drill down into each group views and
+        export_projects(view_details['views'], group)
+      end
+
+    end
+
+    private
+
     def no_groups?
       @no_groups ||= @options[:no_groups]
     end
@@ -16,21 +31,18 @@ module MaestroJenkinsExporter
       @client ||= JenkinsApi::Client.new(@options)
     end
 
+    def maestro_client
+      @maestro_client ||= MaestroJenkinsExporter::MaestroClient.new(options)
+    end
+
+    def jenkins_task_id
+      @jenkins_task_id  ||= @maestro_client.find_jenkins_task_id
+    end
+
     def dryrun?
       @dryrun ||= @options[:dryrun]
     end
 
-    def export
-      # First export the top-level views and import into lucee groups.
-      views = list_group_views
-      views.each do |view|
-        view_details =  client.view.get_config(view)
-        group = add_group_to_lucee(group_from_view(view_details))
-        # Drill down into each group views and
-        export_projects(view_details['views'], group)
-      end
-
-    end
 
     # Exports the projects from Jenkins and add to LuCEE
     #
@@ -60,7 +72,7 @@ module MaestroJenkinsExporter
     def export_compositions(jobs, project)
 
       jobs.each do |job|
-        job_details = client.job.list_details(jobs['name'])
+        job_details = client.job.list_details(job['name'])
         add_composition_to_lucee(composition_from_job(job_details), project)
       end
 
@@ -88,26 +100,28 @@ module MaestroJenkinsExporter
     #
 
     def add_group_to_lucee(group)
-      # TODO
       # Add to lucee if it doesn't exist. Return the updated data model (we'll need the group ID).
-      puts group['name'] if dryrun?
-      group
+      if dryrun?
+        puts group['name'] if dryrun?
+        return group
+      end
+      maestro_client.add_group(group)
     end
 
     def add_project_to_lucee(project)
       # TODO
       puts "\t#{tproject['name']}" if dryrun?
 
-      project
+      maestro_client.add_project(project)
     end
 
     def add_project_to_group(project, group)
-      # TODO
+      maestro_client.add_project_to_group(project, group)
     end
 
     def add_composition_to_lucee(composition, project)
       puts "\t\t#{composition['name']}" if dryrun?
-      # TODO
+      maestro_client.add_composition(project, composition)
     end
 
     #
@@ -129,34 +143,34 @@ module MaestroJenkinsExporter
       composition = {}
       composition['name']= job['name']
       composition['description']= job['description']
-      composition['agent_facts']= {}
-      composition['fail_type']= 'fast'
-      composition['fail_type_id']= 1
-      composition['reuse_agent']= true
+      composition['tags'] = []
+      composition['enabled'] = true
       composition['schedule']= ''
-      composition['sources']= []
-      composition_task = {}
-      composition['composition_tasks'] = [ composition_task ]
-      composition_task['name']= 'jenkins plugin'
-      composition_task['position'] = 1
-      composition_task['sources'] = []
-      options = {}
-      composition_task['options']= options
-      add_composition_task_option(options, 'host', true, 'String', @options['server_ip'])
-      add_composition_task_option(options, 'port', true, 'Integer', @options['server_port'])
-      add_composition_task_option(options, 'web_path', false, 'String', @options['jenkins_path'])
-      add_composition_task_option(options, 'use_ssl', true, 'Boolean', @options['ssl'])
-      add_composition_task_option(options, 'username', false, 'String', @options['username'])
-      add_composition_task_option(options, 'password', false, 'Password', @options['password'])
-      add_composition_task_option(options, 'job', true, 'String', job['name'])
-      add_composition_task_option(options, 'override_existing', true, 'Boolean', false)
-      add_composition_task_option(options, 'scm_url', false, 'Url', '')
-      add_composition_task_option(options, 'steps', true, 'Array', [])
+      composition['failTypeId']= 1
+      composition['onErrorId'] = 0
+      composition['agentFacts']= {}
+      composition['agentPoolId'] = 1
+      composition['failOnCancel'] = false
+      composition['values'] = task_values_from_job(job)
+    end
 
-      #composition['agent_pool_id']= nil
-      #composition['on_error_composition']= nil
-      #composition['on_error_id']= nil
-      #composition['state']= nil
+    def task_values_from_job(job)
+      task_id = "task_#{jenkins_task_id}_1"
+      task = {}
+      task['host'] = @options['server_ip']
+      task['port'] = @options['server_port']
+      task['job'] = job['name']
+      task['username'] = @options['username']
+      task['password'] = @options['password']
+      task['scm_url'] = ""
+      task['use_ssl'] = @options[ssl]
+      task['override_existing'] = false
+      task['parameters'] = []
+      task['label_axes'] = []
+      task['steps'] = []
+      task['position'] = 1
+      task['source'] = "-1"
+      { task_id => task }
     end
 
     # Add a new option to the given composition task
