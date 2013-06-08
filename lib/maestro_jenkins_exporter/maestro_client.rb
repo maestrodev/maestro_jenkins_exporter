@@ -72,7 +72,7 @@ module MaestroJenkinsExporter
       login unless authenticated?
       existing_project = find_project_by_name(project['name'])
       return existing_project if existing_project
-      JSON.parse(RestClient.post(resource_url('projects'), project.to_json, :content_type => :json, :cookies => @cookies).body)
+      JSON.parse(RestClient.post(resource_url('projects'), { :projectName => project['name'], :projectDescription => project['description'] }, :cookies => @cookies).body)
     end
 
 
@@ -83,7 +83,7 @@ module MaestroJenkinsExporter
       end
 
       login unless authenticated?
-      RestClient.post(resource_url("groups/#{group['id']}/projects/#{project['id']}"), "", :cookies => @cookies)
+      RestClient.post(resource_url("groups/#{group['id']}/projects/#{project['id']}"), "", :content_type => :json, :cookies => @cookies)
       group['projects'] << project
     end
 

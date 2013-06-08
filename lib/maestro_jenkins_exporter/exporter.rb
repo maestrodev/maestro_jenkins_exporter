@@ -13,10 +13,10 @@ module MaestroJenkinsExporter
       # First export the top-level views and import into lucee groups.
       views = list_group_views
       views.each do |view|
-        view_details = client.view.get_config(view)
-        group = add_group_to_lucee(group_from_view(view_details))
+        details = view_details(view)
+        group = add_group_to_lucee(group_from_view(details))
         # Drill down into each group views and
-        export_projects(view_details['views'], group)
+        export_projects(details['views'], group)
       end
 
     end
@@ -32,7 +32,7 @@ module MaestroJenkinsExporter
     end
 
     def maestro_client
-      @maestro_client ||= MaestroJenkinsExporter::MaestroClient.new(options)
+      @maestro_client ||= MaestroJenkinsExporter::MaestroClient.new(@options)
     end
 
     def jenkins_task_id
@@ -53,7 +53,7 @@ module MaestroJenkinsExporter
 
       views.each do |view|
         # Get the project details from Jenkins, create a maestro project, add it to LuCEE and associate with a group
-        jenkins_project = project_details(view['name'], group['name'])
+        jenkins_project = view_details(view['name'], group['name'])
         maestro_project = add_project_to_lucee(project_from_view(jenkins_project))
         add_project_to_group(maestro_project, group)
 
@@ -83,8 +83,8 @@ module MaestroJenkinsExporter
     #
 
     # Get the project details given a project name and a parent group name
-    def project_details(project_name, group='')
-      url_prefix = group.length == 0 ? "/view/#{project_name}" : "/view/#{group}/view/#{project_name}"
+    def view_details(view, parent_view='')
+      url_prefix = parent_view.empty? ? "/view/#{view}" : "/view/#{parent_view}/view/#{view}"
       client.api_get_request(url_prefix)
     end
 
@@ -152,6 +152,7 @@ module MaestroJenkinsExporter
       composition['agentPoolId'] = 1
       composition['failOnCancel'] = false
       composition['values'] = task_values_from_job(job)
+      composition
     end
 
     def task_values_from_job(job)
@@ -162,14 +163,14 @@ module MaestroJenkinsExporter
       task['job'] = job['name']
       task['username'] = @options['username']
       task['password'] = @options['password']
-      task['scm_url'] = ""
-      task['use_ssl'] = @options[ssl]
+      task['scm_url'] = ''
+      task['use_ssl'] = @options['ssl']
       task['override_existing'] = false
       task['parameters'] = []
       task['label_axes'] = []
       task['steps'] = []
       task['position'] = 1
-      task['source'] = "-1"
+      task['source'] = '-1'
       { task_id => task }
     end
 
