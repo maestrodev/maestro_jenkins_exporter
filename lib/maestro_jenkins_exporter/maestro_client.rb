@@ -1,5 +1,5 @@
-require 'httparty'
 require 'rest_client'
+require 'logger'
 
 module MaestroJenkinsExporter
 
@@ -9,22 +9,47 @@ module MaestroJenkinsExporter
       @options = options
     end
 
+    # Returns the base URL that includes scheme, host and port.
     def base_url
-      @base_url||=@options['maestro_base_url']
+      @base_url||=@options['base_url']
     end
 
+    # Returns the base API URL, prefixed by the base url.
     def api_url
-      @api_url ||="#{base_url}#{@options['maestro_api_url']}"
+      @api_url ||="#{base_url}#{@options['api_url']}"
     end
 
+    # Returns the Maestro login username
     def username
-      @username||=@options['maestro_username']
+      @username||=@options['username']
     end
 
+    # Returns the Maestro login password
     def password
-      @password||=@options['maestro_password']
+      @password||=@options['password']
     end
 
+    # Returns the Jenkins plugin task to look for
+    def jenkins_task_name
+      @jenkins_task_name||=@options['jenkins_task_name'] || 'jenkins plugin'
+    end
+
+    def logger
+      @logger ||=  Logger.new(STDERR)
+    end
+
+    # Find the task ID for the Jenkins build task
+    def jenkins_task_id
+      return @jenkins_task_id unless @jenkins_task_id.nil?
+      login unless authenticated?
+      tasks = JSON.parse(RestClient.get(resource_url('tasks'), :cookies => @cookies).body)
+      task_index = tasks.find_index{ |task| task['name'] == jenkins_task_name }
+      fail 'Jenkins Plugin not installed or misconfigured. Could not find Jenkins task ID' unless task_index and tasks[task_index]['id']
+      @jenkins_task_id = tasks[task_index]['id']
+    end
+
+
+    # Login to Maestro, save the session cookie
     def login
       RestClient.post("#{base_url}/j_spring_security_check", {:j_username => username, :j_password => password}) do |response, request, result, &block|
         @cookies = response.cookies
@@ -37,11 +62,13 @@ module MaestroJenkinsExporter
       end
     end
 
+    # Are we authenticated?
     def authenticated?
-      return false if @cookies.nil?
+      true unless @cookies.nil?
     end
 
-    def find_group_by_name(name)
+    # Finds a group by name
+    def find_group(name)
       login unless authenticated?
       group = JSON.parse RestClient.get(resource_url("groups/#{URI.escape(name)}"), :cookies => @cookies).body
       return group['name'] == name ? group : nil
@@ -49,16 +76,17 @@ module MaestroJenkinsExporter
       return nil
     end
 
+    # Add a group to Maestro. In case of name collision, it will simply retrieve the existing group and return its data.
     def add_group(group)
       login unless authenticated?
-      existing_group = find_group_by_name(group['name'])
+      existing_group = find_group(group['name'])
       return existing_group if existing_group
       JSON.parse(RestClient.post(resource_url('groups'), group.to_json, :content_type => :json, :cookies => @cookies).body)
+      logger.info("Added group: #{group['name']}")
     end
 
-
-
-    def find_project_by_name(name)
+    # Retrieves an existing project by its name.
+    def find_project(name)
       login unless authenticated?
       response = RestClient.get(resource_url("projects/#{URI.escape(name)}"), :cookies => @cookies)
       project = JSON.parse response.body
@@ -67,15 +95,16 @@ module MaestroJenkinsExporter
       return nil
     end
 
-
+    # Add a project to Maestro. In case of naming collision, it will simply retrieve the existing project and return its data.
     def add_project(project)
       login unless authenticated?
-      existing_project = find_project_by_name(project['name'])
+      existing_project = find_project(project['name'])
       return existing_project if existing_project
       JSON.parse(RestClient.post(resource_url('projects'), { :projectName => project['name'], :projectDescription => project['description'] }, :cookies => @cookies).body)
+      logger.info("Added project: #{project['name']}")
     end
 
-
+    # Associates a project to a group.
     def add_project_to_group(project, group)
       group_projects = group['projects']
       unless group_projects.nil? or group_projects.empty?
@@ -84,28 +113,23 @@ module MaestroJenkinsExporter
 
       login unless authenticated?
       RestClient.post(resource_url("groups/#{group['id']}/projects/#{project['id']}"), "", :content_type => :json, :cookies => @cookies)
+      logger.info("Added project '#{project['name']}' to group '#{group['name']}'")
       group['projects'] << project
     end
 
-
+    # Add the composition to Maestro under the specified project.
     def add_composition(project, composition)
       login unless authenticated?
-      # remove and save the values for later
+      # remove and save the values for later. Otherwise Maestro chokes when parsing values.
       values = composition.delete('values')
       # Save the composition without any tasks
       response = RestClient.post(resource_url("projects/#{project['id']}/compositions?templateId=-1"), composition.to_json, :content_type => :json, :cookies => @cookies)
       # re-add the values and save the tasks
       composition['values']=values
       RestClient.post("#{response.headers[:location]}/tasks/save", composition.to_json, :content_type => :json, :cookies => @cookies)
+      logger.info("Added composition '#{composition['name']}' to project '#{project['name']}'")
     rescue RestClient::Conflict => e
-      puts 'Warning composition already exists'
-    end
-
-    def find_jenkins_task_id
-      login unless authenticated?
-      tasks = JSON.parse(RestClient.get(resource_url('tasks'), :cookies => @cookies).body)
-      task_index = tasks.find_index{ |task| task['name'] == 'jenkins plugin' }
-      return task_index ? tasks[task_index]['id'] : nil
+      logger.info "Composition '#{composition['name']}' already exists in project '#{project['name']}'. Skipping"
     end
 
     private

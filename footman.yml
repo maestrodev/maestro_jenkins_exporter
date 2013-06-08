@@ -1,11 +1,13 @@
 ---
-server_ip: localhost
-server_port: 8080
-jenkins_path: /
-username: admin
-password: admin
-ssl: false
-maestro_base_url: http://localhost:8888
-maestro_api_url: /api/v1
-maestro_username: admin
-maestro_password: admin1
+jenkins:
+  server_ip: localhost
+  server_port: 8080
+  jenkins_path: /
+  username: admin
+  password: admin
+  ssl: false
+maestro:
+  base_url: http://localhost:8888
+  api_url: /api/v1
+  username: admin
+  password: admin1

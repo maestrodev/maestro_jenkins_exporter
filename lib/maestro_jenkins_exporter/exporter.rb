@@ -1,4 +1,5 @@
 require 'jenkins_api_client'
+require 'logger'
 
 module MaestroJenkinsExporter
 
@@ -10,11 +11,11 @@ module MaestroJenkinsExporter
 
 
     def export
-      # First export the top-level views and import into lucee groups.
+      # First export the top-level views and import into Maestro groups.
       views = list_group_views
       views.each do |view|
         details = view_details(view)
-        group = add_group_to_lucee(group_from_view(details))
+        group = add_group_to_maestro(group_from_view(details))
         # Drill down into each group views and
         export_projects(details['views'], group)
       end
@@ -27,16 +28,20 @@ module MaestroJenkinsExporter
       @no_groups ||= @options[:no_groups]
     end
 
-    def client
-      @client ||= JenkinsApi::Client.new(@options)
+    def jenkins_client
+      @jenkins_client ||= JenkinsApi::Client.new(@options['jenkins'])
     end
 
     def maestro_client
-      @maestro_client ||= MaestroJenkinsExporter::MaestroClient.new(@options)
+      @maestro_client ||= MaestroJenkinsExporter::MaestroClient.new(@options['maestro'])
     end
 
     def jenkins_task_id
-      @jenkins_task_id  ||= @maestro_client.find_jenkins_task_id
+      @jenkins_task_id  ||= maestro_client.jenkins_task_id
+    end
+
+    def logger
+      @logger ||=  Logger.new(STDERR)
     end
 
     def dryrun?
@@ -44,7 +49,7 @@ module MaestroJenkinsExporter
     end
 
 
-    # Exports the projects from Jenkins and add to LuCEE
+    # Exports the projects from Jenkins and add to Maestro
     #
     # *views* a list of (sub)views obtained from the group view details.
     # *group* a maestro group object to associate the new project with.
@@ -52,9 +57,9 @@ module MaestroJenkinsExporter
     def export_projects(views, group)
 
       views.each do |view|
-        # Get the project details from Jenkins, create a maestro project, add it to LuCEE and associate with a group
+        # Get the project details from Jenkins, create a maestro project, add it to Maestro and associate with a group
         jenkins_project = view_details(view['name'], group['name'])
-        maestro_project = add_project_to_lucee(project_from_view(jenkins_project))
+        maestro_project = add_project_to_maestro(project_from_view(jenkins_project))
         add_project_to_group(maestro_project, group)
 
         # Then we drill down each project and add all the compositions
@@ -64,7 +69,7 @@ module MaestroJenkinsExporter
     end
 
     # Given a list of jobs obtained from a Jenkins view, create maestro compositions, associate with given project,
-    # and add to LuCEE.
+    # and add to Maestro.
     #
     # *jobs* a list of Jenkins jobs extracted from its parent view data.
     # *project* the Maestro project where the new composition belongs.
@@ -72,8 +77,8 @@ module MaestroJenkinsExporter
     def export_compositions(jobs, project)
 
       jobs.each do |job|
-        job_details = client.job.list_details(job['name'])
-        add_composition_to_lucee(composition_from_job(job_details), project)
+        job_details = jenkins_client.job.list_details(job['name'])
+        add_composition_to_maestro(composition_from_job(job_details), project)
       end
 
     end
@@ -85,22 +90,22 @@ module MaestroJenkinsExporter
     # Get the project details given a project name and a parent group name
     def view_details(view, parent_view='')
       url_prefix = parent_view.empty? ? "/view/#{view}" : "/view/#{parent_view}/view/#{view}"
-      client.api_get_request(url_prefix)
+      jenkins_client.api_get_request(url_prefix)
     end
 
     # List all the top-level group views, minus the default "All"
     def list_group_views
-      views = client.view.list
+      views = jenkins_client.view.list
       views.delete('All')
       views
     end
 
     #
-    # LuCEE API interaction methods
+    # Maestro API interaction methods
     #
 
-    def add_group_to_lucee(group)
-      # Add to lucee if it doesn't exist. Return the updated data model (we'll need the group ID).
+    def add_group_to_maestro(group)
+      # Add to Maestro if it doesn't exist. Return the updated data model (we'll need the group ID).
       if dryrun?
         puts group['name'] if dryrun?
         return group
@@ -108,7 +113,7 @@ module MaestroJenkinsExporter
       maestro_client.add_group(group)
     end
 
-    def add_project_to_lucee(project)
+    def add_project_to_maestro(project)
       # TODO
       puts "\t#{tproject['name']}" if dryrun?
 
@@ -119,7 +124,7 @@ module MaestroJenkinsExporter
       maestro_client.add_project_to_group(project, group)
     end
 
-    def add_composition_to_lucee(composition, project)
+    def add_composition_to_maestro(composition, project)
       puts "\t\t#{composition['name']}" if dryrun?
       maestro_client.add_composition(project, composition)
     end
@@ -163,10 +168,12 @@ module MaestroJenkinsExporter
       task['job'] = job['name']
       task['username'] = @options['username']
       task['password'] = @options['password']
+      task['web_path'] = @options['jenkins_path']
       task['scm_url'] = ''
       task['use_ssl'] = @options['ssl']
       task['override_existing'] = false
       task['parameters'] = []
+      task['user_defined_axes'] = []
       task['label_axes'] = []
       task['steps'] = []
       task['position'] = 1
