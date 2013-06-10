@@ -102,12 +102,13 @@ module MaestroJenkinsExporter
       return existing_project if existing_project
       project['description'] = strip_html(project['description']).slice(0, 255)
       begin
-        JSON.parse(RestClient.post(resource_url('projects'), {:projectName => project['name'], :projectDescription => project['description']}, :cookies => @cookies).body)
+        project = JSON.parse(RestClient.post(resource_url('projects'), {:projectName => project['name'], :projectDescription => project['description']}, :cookies => @cookies).body)
       rescue RestClient::Conflict => e
         logger.error("Unable to add project '#{project['name']}': #{e.response}")
         raise e
       end
       logger.info("Added project: #{project['name']}")
+      project
     end
 
     # Associates a project to a group.
