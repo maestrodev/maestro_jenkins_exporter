@@ -81,8 +81,9 @@ module MaestroJenkinsExporter
       login unless authenticated?
       existing_group = find_group(group['name'])
       return existing_group if existing_group
-      JSON.parse(RestClient.post(resource_url('groups'), group.to_json, :content_type => :json, :cookies => @cookies).body)
+      group = JSON.parse(RestClient.post(resource_url('groups'), group.to_json, :content_type => :json, :cookies => @cookies).body)
       logger.info("Added group: #{group['name']}")
+      group
     end
 
     # Retrieves an existing project by its name.
