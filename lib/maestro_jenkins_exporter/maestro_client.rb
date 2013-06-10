@@ -100,7 +100,12 @@ module MaestroJenkinsExporter
       login unless authenticated?
       existing_project = find_project(project['name'])
       return existing_project if existing_project
-      JSON.parse(RestClient.post(resource_url('projects'), { :projectName => project['name'], :projectDescription => project['description'] }, :cookies => @cookies).body)
+      begin
+        JSON.parse(RestClient.post(resource_url('projects'), {:projectName => project['name'], :projectDescription => project['description']}, :cookies => @cookies).body)
+      rescue RestClient::Conflict => e
+        logger.error("Unable to add project '#{project['name']}': #{e.response}")
+        raise e
+      end
       logger.info("Added project: #{project['name']}")
     end
 
