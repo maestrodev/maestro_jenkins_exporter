@@ -162,14 +162,16 @@ module MaestroJenkinsExporter
     def task_values_from_job(job)
       task_id = "task_#{jenkins_task_id}_1"
       task = {}
-      task['host'] = @options['server_ip']
-      task['port'] = @options['server_port']
+      # TODO: as this never changes, would be better to construct and use a source
+      jenkins_options = @options['jenkins']
+      task['host'] = jenkins_options['server_ip']
+      task['port'] = jenkins_options['server_port']
       task['job'] = job['name']
-      task['username'] = @options['username']
-      task['password'] = @options['password']
-      task['web_path'] = @options['jenkins_path']
+      task['username'] = jenkins_options['username']
+      task['password'] = jenkins_options['password']
+      task['web_path'] = jenkins_options['jenkins_path']
       task['scm_url'] = ''
-      task['use_ssl'] = @options['ssl']
+      task['use_ssl'] = jenkins_options['ssl']
       task['override_existing'] = false
       task['parameters'] = []
       task['user_defined_axes'] = []
