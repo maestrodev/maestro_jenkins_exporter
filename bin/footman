@@ -9,4 +9,7 @@ require 'yaml'
 
 options = YAML.load(File.open("footman.yml"))
 
+# TODO: summarise options if being verbose
+# TODO: command line options to override options: no-groups, dry-run, verbose
+
 MaestroJenkinsExporter::Exporter.new(options).export

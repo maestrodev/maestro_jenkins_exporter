@@ -25,7 +25,7 @@ module MaestroJenkinsExporter
     private
 
     def no_groups?
-      @no_groups ||= @options[:no_groups]
+      @no_groups ||= @options['nogroups']
     end
 
     def jenkins_client
@@ -33,7 +33,14 @@ module MaestroJenkinsExporter
     end
 
     def maestro_client
-      @maestro_client ||= MaestroJenkinsExporter::MaestroClient.new(@options['maestro'])
+      if @maestro_client.nil?
+        if dryrun?
+          @maestro_client = MaestroJenkinsExporter::StubMaestroClient.new
+        else
+          @maestro_client = MaestroJenkinsExporter::MaestroClient.new(@options['maestro'])
+        end
+      end
+      @maestro_client
     end
 
     def jenkins_task_id
@@ -45,7 +52,7 @@ module MaestroJenkinsExporter
     end
 
     def dryrun?
-      @dryrun ||= @options[:dryrun]
+      @dryrun ||= @options['dryrun']
     end
 
 
@@ -106,17 +113,10 @@ module MaestroJenkinsExporter
 
     def add_group_to_maestro(group)
       # Add to Maestro if it doesn't exist. Return the updated data model (we'll need the group ID).
-      if dryrun?
-        puts group['name'] if dryrun?
-        return group
-      end
       maestro_client.add_group(group)
     end
 
     def add_project_to_maestro(project)
-      # TODO
-      puts "\t#{tproject['name']}" if dryrun?
-
       maestro_client.add_project(project)
     end
 
@@ -125,7 +125,6 @@ module MaestroJenkinsExporter
     end
 
     def add_composition_to_maestro(composition, project)
-      puts "\t\t#{composition['name']}" if dryrun?
       maestro_client.add_composition(project, composition)
     end
 

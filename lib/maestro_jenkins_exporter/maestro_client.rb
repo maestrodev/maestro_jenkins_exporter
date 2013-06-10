@@ -140,4 +140,29 @@ module MaestroJenkinsExporter
 
   end
 
+  class StubMaestroClient
+    def add_group(group)
+      puts "#{group['name']} (#{group['description']})"
+      group
+    end
+
+    def add_project(project)
+      puts "  #{project['name']} (#{project['description']})"
+      project
+    end
+
+    def add_project_to_group(project, group)
+
+    end
+
+    def jenkins_task_id
+      1
+    end
+
+    def add_composition(project, composition)
+      puts "    #{composition['name']} (#{composition['description']})"
+      puts "      #{composition['values']}"
+    end
+  end
+
 end
