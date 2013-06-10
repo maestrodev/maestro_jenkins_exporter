@@ -141,6 +141,7 @@ module MaestroJenkinsExporter
     private
 
     def resource_url(resource)
+      logger.debug("resource URL: #{resource}")
       "#{api_url}/#{resource}"
     end
 
