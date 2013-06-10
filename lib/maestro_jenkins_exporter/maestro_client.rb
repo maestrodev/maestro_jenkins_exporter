@@ -100,6 +100,7 @@ module MaestroJenkinsExporter
       login unless authenticated?
       existing_project = find_project(project['name'])
       return existing_project if existing_project
+      project['description'] = strip_html(project['description']).slice(0, 255)
       begin
         JSON.parse(RestClient.post(resource_url('projects'), {:projectName => project['name'], :projectDescription => project['description']}, :cookies => @cookies).body)
       rescue RestClient::Conflict => e
@@ -141,6 +142,10 @@ module MaestroJenkinsExporter
 
     def resource_url(resource)
       "#{api_url}/#{resource}"
+    end
+
+    def strip_html(html)
+      Nokogiri::HTML(html).text if html
     end
 
   end
