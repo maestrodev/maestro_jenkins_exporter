@@ -46,3 +46,15 @@ maestro:
 
 To run the export/import process, simply invoke the `footman` command. It
 will connect to Jenkins and Maestro and import the job data.
+
+## Structure
+
+To simplify the initial export process, this tool currently relies on
+Jenkins having a 2-level nesting of views which can be used to construct
+the following structure in Maestro:
+
+```
+top level views -> groups
+   second level views -> projects
+     jobs -> compositions
+```
