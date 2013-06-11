@@ -6,13 +6,13 @@ describe MaestroJenkinsExporter::Exporter do
   include JsonSpec::Helpers
 
   subject do
-    options = { 'server_ip' => 'localhost',
-                'server_port' => 8080,
-                'jenkins_path' => '/',
-                'username' => 'username',
-                'password' => 'password',
-                'ssl' => false }
-    MaestroJenkinsExporter::Exporter.new(options)
+    jenkins_options = {'server_ip' => 'localhost',
+                       'server_port' => 8080,
+                       'jenkins_path' => '/',
+                       'username' => 'username',
+                       'password' => 'password',
+                       'ssl' => false}
+    MaestroJenkinsExporter::Exporter.new({ 'jenkins' => jenkins_options})
   end
 
   before(:all) { JsonSpec.directory= File.dirname(__FILE__) }

@@ -13,8 +13,8 @@
             "host": "localhost",
             "port": 8080,
             "job": "Test Job",
-            "username": "username",
-            "password": "password",
+            /*"username": "username",
+            "password": "password",*/
             "web_path": "/",
             "scm_url": "",
             "use_ssl": false,
