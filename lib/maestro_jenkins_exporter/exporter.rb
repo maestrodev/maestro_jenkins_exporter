@@ -167,8 +167,9 @@ module MaestroJenkinsExporter
       task['host'] = jenkins_options['server_ip']
       task['port'] = jenkins_options['server_port']
       task['job'] = job['name']
-      task['username'] = jenkins_options['username']
-      task['password'] = jenkins_options['password']
+      # TODO: u/p might not want to be passed through, even if needed to retrieve things from Jenkins. Make configurable
+      #task['username'] = jenkins_options['username']
+      #task['password'] = jenkins_options['password']
       task['web_path'] = jenkins_options['jenkins_path']
       task['scm_url'] = ''
       task['use_ssl'] = jenkins_options['ssl']
