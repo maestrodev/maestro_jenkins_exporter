@@ -17,3 +17,4 @@ test/version_tmp
 tmp
 footman.yml
 .idea/
+maestro_jenkins_exporter.jar
