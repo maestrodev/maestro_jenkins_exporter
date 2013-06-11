@@ -16,7 +16,11 @@ bundle install
 ./bin/footman
 ```
 
+To run the downloaded executable JAR instead, simply use:
 
+```
+java -jar maestro_jenkins_exporter.jar
+```
 
 ## Usage
 
