@@ -7,19 +7,16 @@ mapped to Maestro projects. Jobs listed in  the second-level views are mapped
 to compositions. If any of the jobs in Jenkins has a an already existing
 matching composition in Maestro, it will be skipped.
 
-## Installation
+## Execution
 
-Add this line to your application's Gemfile:
+To run the ruby application from this directory:
 
-    gem 'maestro_jenkins_exporter'
+```
+bundle install
+./bin/footman
+```
 
-And then execute:
 
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install maestro_jenkins_exporter
 
 ## Usage
 
