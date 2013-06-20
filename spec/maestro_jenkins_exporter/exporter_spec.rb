@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'json_spec'
+require 'nokogiri'
 
 describe MaestroJenkinsExporter::Exporter do
 
@@ -12,7 +13,11 @@ describe MaestroJenkinsExporter::Exporter do
                        'username' => 'username',
                        'password' => 'password',
                        'ssl' => false}
-    MaestroJenkinsExporter::Exporter.new({ 'jenkins' => jenkins_options})
+    sonar_options = { 'url' => 'http://localhost:9000',
+                      'username' => 'soandso',
+                      'password' => 'nunya'}
+    MaestroJenkinsExporter::Exporter.new({ 'jenkins' => jenkins_options, 'sonar' => sonar_options })
+
   end
 
   before(:all) { JsonSpec.directory= File.dirname(__FILE__) }
@@ -67,6 +72,7 @@ describe MaestroJenkinsExporter::Exporter do
       subject.should_receive(:add_group_to_maestro).with(group).and_return(group)
       project_view_details = canned_response('project_view.json')
       @jenkins_client.should_receive(:api_get_request).with('/view/Group View/view/Project View').and_return(project_view_details)
+      job_config = IO.read( File.dirname(__FILE__) + '/job_config.xml')
       project = {'name' => 'Project View', 'description' => 'Project View Description'}
       # this validates the translation from view details to a maestro project
       subject.should_receive(:project_from_view).with(project_view_details).and_call_original
@@ -75,11 +81,14 @@ describe MaestroJenkinsExporter::Exporter do
       job_details = canned_response('jenkins_job.json')
       job = double("Job")
       job.should_receive(:list_details).with("Test Job").and_return(job_details)
+      job.should_receive(:get_config).with("Test Job").and_return(job_config)
       @jenkins_client.stub(:job => job)
       @maestro_client.should_receive(:add_project).with(project).and_return(project)
       @maestro_client.should_receive(:add_project_to_group).with(project, group)
       @maestro_client.stub(:jenkins_task_id => 27)
+      @maestro_client.stub(:sonar_task_id => 83)
       @maestro_client.should_receive(:add_composition).with(project, canned_response('maestro_composition.json'))
+
       subject.export
 
     end

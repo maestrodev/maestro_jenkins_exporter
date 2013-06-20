@@ -6,6 +6,10 @@ jenkins:
   username: admin
   password: admin
   ssl: false
+sonar:
+  url: http://localhost:9000
+  username: admin
+  password: admin
 maestro:
   base_url: http://localhost:8888
   api_url: /api/v1

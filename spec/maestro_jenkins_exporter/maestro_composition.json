@@ -1,5 +1,4 @@
-{"name": "Test Job", "description":
-    "Some Test",
+{"name": "Test Job", "description": "Some Test",
     "tags": [],
     "enabled": true,
     "schedule": "",
@@ -14,7 +13,7 @@
             "port": 8080,
             "job": "Test Job",
             /*"username": "username",
-            "password": "password",*/
+             "password": "password",*/
             "web_path": "/",
             "scm_url": "",
             "use_ssl": false,
@@ -24,6 +23,14 @@
             "label_axes": [],
             "steps": [],
             "position": 1,
+            "source": "-1"
+        },
+        "task_83_2": {
+            "url": "http://localhost:9000",
+            "username": "soandso",
+            "password": "nunya",
+            "projectKey": "com.maestrodev.lucee:lucee-lib",
+            "position": 2,
             "source": "-1"
         }
     }

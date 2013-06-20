@@ -1,5 +1,6 @@
 require 'jenkins_api_client'
 require 'logger'
+require 'nokogiri'
 
 module MaestroJenkinsExporter
 
@@ -47,6 +48,10 @@ module MaestroJenkinsExporter
       @jenkins_task_id  ||= maestro_client.jenkins_task_id
     end
 
+    def sonar_task_id
+      @sonar_task_id ||= maestro_client.sonar_task_id
+    end
+
     def logger
       @logger ||=  Logger.new(STDERR)
     end
@@ -85,7 +90,8 @@ module MaestroJenkinsExporter
 
       jobs.each do |job|
         job_details = jenkins_client.job.list_details(job['name'])
-        add_composition_to_maestro(composition_from_job(job_details), project)
+        job_config = Nokogiri::XML(jenkins_client.job.get_config(job['name']))
+        add_composition_to_maestro(composition_from_job(job_details, job_config), project)
       end
 
     end
@@ -143,7 +149,7 @@ module MaestroJenkinsExporter
     end
 
     # Create a Maestro composition from Jenkins job details
-    def composition_from_job(job)
+    def composition_from_job(job, job_config)
       composition = {}
       composition['name']= job['name']
       composition['description']= job['description']
@@ -155,11 +161,13 @@ module MaestroJenkinsExporter
       composition['agentFacts']= {}
       composition['agentPoolId'] = 1
       composition['failOnCancel'] = false
-      composition['values'] = task_values_from_job(job)
+      values = add_jenkins_task({}, job)
+      add_sonar_task(values, job_config) if is_sonar_job?(job_config)
+      composition['values'] = values
       composition
     end
 
-    def task_values_from_job(job)
+    def add_jenkins_task(values, job)
       task_id = "task_#{jenkins_task_id}_1"
       task = {}
       # TODO: as this never changes, would be better to construct and use a source
@@ -180,7 +188,34 @@ module MaestroJenkinsExporter
       task['steps'] = []
       task['position'] = 1
       task['source'] = '-1'
-      { task_id => task }
+      values[task_id] = task
+      values
+    end
+
+    # Sonar stuff
+
+    def is_sonar_job?(job_config)
+      return false if job_config.xpath('/maven2-moduleset/publishers/hudson.plugins.sonar.SonarPublisher').empty?
+      return false if job_config.xpath('/maven2-moduleset/rootModule/groupId').empty?
+      return false if job_config.xpath('/maven2-moduleset/rootModule/artifactId').empty?
+      true
+    end
+
+    def add_sonar_task(values, job_config)
+      group_id =  job_config.xpath('/maven2-moduleset/rootModule/groupId')[0].content
+      artifact_id = job_config.xpath('/maven2-moduleset/rootModule/artifactId')[0].content
+      task_id = "task_#{sonar_task_id}_2"
+      task = {}
+      sonar_options = @options['sonar']
+      task['url'] = sonar_options['url']
+      task['username'] = sonar_options['username']
+      task['password'] = sonar_options['password']
+      task['projectKey'] = "#{group_id}:#{artifact_id}"
+      task['position'] = 2
+      task['source'] = '-1'
+      values[task_id] = task
+
+      values
     end
 
     # Add a new option to the given composition task

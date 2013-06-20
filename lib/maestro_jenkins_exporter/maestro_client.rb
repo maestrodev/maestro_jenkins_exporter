@@ -29,24 +29,28 @@ module MaestroJenkinsExporter
       @password||=@options['password']
     end
 
-    # Returns the Jenkins plugin task to look for
-    def jenkins_task_name
-      @jenkins_task_name||=@options['jenkins_task_name'] || 'jenkins plugin'
-    end
-
     def logger
       @logger ||=  Logger.new(STDERR)
     end
 
-    # Find the task ID for the Jenkins build task
+    # Returns the task ID for the Jenkins build task
     def jenkins_task_id
-      return @jenkins_task_id unless @jenkins_task_id.nil?
+      @jenkins_task_id ||= task_id(@options['jenkins_task_name'] || 'jenkins plugin')
+    end
+
+    # Returns the task ID for the sonar build task
+    def sonar_task_id
+      @sonar_task_id ||= task_id(@options['sonar_task_name'] || 'Sonar Plugin')
+    end
+
+    def task_id(task_name)
       login unless authenticated?
       tasks = JSON.parse(RestClient.get(resource_url('tasks'), :cookies => @cookies).body)
-      task_index = tasks.find_index{ |task| task['name'] == jenkins_task_name }
-      fail 'Jenkins Plugin not installed or misconfigured. Could not find Jenkins task ID' unless task_index and tasks[task_index]['id']
-      @jenkins_task_id = tasks[task_index]['id']
+      task_index = tasks.find_index{ |task| task['name'] == task_name }
+      fail "Plugin not installed or misconfigured. Could not find #{task_name} task ID" unless task_index and tasks[task_index]['id']
+      tasks[task_index]['id']
     end
+
 
 
     # Login to Maestro, save the session cookie
