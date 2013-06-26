@@ -50,11 +50,16 @@ will connect to Jenkins and Maestro and import the job data.
 ## Structure
 
 To simplify the initial export process, this tool currently relies on
-Jenkins having a 2-level nesting of views which can be used to construct
+Jenkins having up to a 2-level nesting of views which can be used to construct
 the following structure in Maestro:
 
 ```
 top level views -> groups
+   jobs -> compositions (group project)
    second level views -> projects
      jobs -> compositions
+jobs -> compositions (ungrouped project)
 ```
+
+Further nesting of views will be ignored with a message in the output, and any jobs will be added to the ungrouped
+project.
