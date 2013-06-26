@@ -177,6 +177,10 @@ module MaestroJenkinsExporter
       1
     end
 
+    def sonar_task_id
+      2
+    end
+
     def add_composition(project, composition)
       puts "    #{composition['name']} (#{composition['description']})"
       puts "      #{composition['values']}"
