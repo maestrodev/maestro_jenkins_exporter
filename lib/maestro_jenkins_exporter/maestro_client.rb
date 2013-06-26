@@ -134,11 +134,30 @@ module MaestroJenkinsExporter
       response = RestClient.post(resource_url("projects/#{project['id']}/compositions?templateId=-1"), composition.to_json, :content_type => :json, :cookies => @cookies)
       # re-add the values and save the tasks
       composition['values']=values
+      puts composition.to_json
+      puts "#{response.headers[:location]}/tasks/save"
       RestClient.post("#{response.headers[:location]}/tasks/save", composition.to_json, :content_type => :json, :cookies => @cookies)
       logger.info("Added composition '#{composition['name']}' to project '#{project['name']}'")
     rescue RestClient::Conflict => e
       logger.info "Composition '#{composition['name']}' already exists in project '#{project['name']}'. Skipping"
     end
+
+    def find_source(type, name)
+      selected_sources = sources.select { |source| source['sourceType'] == type and source['name'] == name }
+      return selected_sources[0] if selected_sources and selected_sources.length > 0
+      return nil
+    end
+
+    def sources
+      return @sources if @sources
+      login unless authenticated?
+      response = RestClient.get(resource_url('sources'), :cookies => @cookies)
+      @sources = JSON.parse response.body
+      @sources
+    rescue RestClient::ResourceNotFound
+      return nil
+    end
+
 
     private
 

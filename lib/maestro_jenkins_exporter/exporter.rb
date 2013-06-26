@@ -17,7 +17,7 @@ module MaestroJenkinsExporter
 
 
     def export
-      all_jobs = jenkins_client.job.list_all
+      all_jobs = list_all_jobs
       logger.info "Mapping #{all_jobs.size} Jenkins jobs"
 
       # First export the top-level views and import into Maestro groups.
@@ -66,8 +66,38 @@ module MaestroJenkinsExporter
 
     private
 
+    def list_all_jobs
+      all_jobs = jenkins_client.job.list_all
+    end
+
     def jenkins_client
-      @jenkins_client ||= JenkinsApi::Client.new(@options['jenkins'])
+      @jenkins_client ||= JenkinsApi::Client.new(jenkins_options)
+    end
+
+    def jenkins_options
+      jenkins_options =  @options['jenkins']
+      if jenkins_options['source_name']
+        source = jenkins_source
+        if source
+          jenkins_options = { 'server_ip' => source['options']['host'],
+                              'server_port' => source['options']['port'],
+                              'jenkins_path' => source['options']['web_path'],
+                              'username' => source['options']['username'],
+                              'password' => source['options']['password'],
+                              # TODO add this to Jenkins source
+                              'ssl' => jenkins_options['ssl']
+          }
+        end
+      end
+      jenkins_options
+    end
+
+    def jenkins_source
+      @jenkins_source ||= maestro_client.find_source('Jenkins', @options['jenkins']['source_name'])
+    end
+
+    def sonar_source
+      @sonar_source ||= maestro_client.find_source('Sonar', @sonar_options['source_name'])
     end
 
     def maestro_client
@@ -226,15 +256,15 @@ module MaestroJenkinsExporter
     def add_jenkins_task(values, job)
       task_id = "task_#{jenkins_task_id}_1"
       task = {}
-      # TODO: as this never changes, would be better to construct and use a source
       jenkins_options = @options['jenkins']
+      task['source'] = (jenkins_options['source_name'] and jenkins_source) ? "#{jenkins_source['id']}" : '-1'
       task['host'] = jenkins_options['server_ip']
       task['port'] = jenkins_options['server_port']
-      task['job'] = job['name']
       # TODO: u/p might not want to be passed through, even if needed to retrieve things from Jenkins. Make configurable
       #task['username'] = jenkins_options['username']
       #task['password'] = jenkins_options['password']
       task['web_path'] = jenkins_options['jenkins_path']
+      task['job'] = job['name']
       task['scm_url'] = ''
       task['use_ssl'] = jenkins_options['ssl']
       task['override_existing'] = false
@@ -243,7 +273,6 @@ module MaestroJenkinsExporter
       task['label_axes'] = []
       task['steps'] = []
       task['position'] = 1
-      task['source'] = '-1'
       values[task_id] = task
       values
     end
@@ -262,15 +291,15 @@ module MaestroJenkinsExporter
       artifact_id = job_config.xpath('/maven2-moduleset/rootModule/artifactId')[0].content
       task_id = "task_#{sonar_task_id}_2"
       task = {}
-      # TODO: as this never changes, would be better to construct and use a source
       sonar_options = @options['sonar'] || {}
+      task['source'] = (sonar_options['source_name'] and sonar_source) ? sonar_source['id'] :  '-1'
+
       raise "Sonar URL is required" unless sonar_options['url']
       task['url'] = sonar_options['url']
       task['username'] = sonar_options['username']
       task['password'] = sonar_options['password']
       task['projectKey'] = "#{group_id}:#{artifact_id}"
       task['position'] = 2
-      task['source'] = '-1'
       values[task_id] = task
 
       values

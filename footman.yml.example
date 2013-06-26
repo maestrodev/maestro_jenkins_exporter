@@ -1,5 +1,6 @@
 ---
 jenkins:
+  source_name: Jenkins
   server_ip: localhost
   server_port: 8080
   jenkins_path: /
@@ -7,6 +8,7 @@ jenkins:
   password: admin
   ssl: false
 sonar:
+  source_name: Sonar
   url: http://localhost:9000
   username: admin
   password: admin

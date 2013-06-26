@@ -62,6 +62,30 @@ describe MaestroJenkinsExporter::MaestroClient do
   #
   #end
 
+  it 'should find a jenkins source' do
+    sources = JSON.parse(IO.read( File.dirname(__FILE__) + '/sources.json'))
+    subject.stub(:sources => sources)
+
+    source = subject.find_source('Jenkins', 'Jenkins')
+
+    source['name'].should == 'Jenkins'
+    source['options']['host'].should == 'localhost'
+
+  end
+
+
+  it 'should find a sonar source' do
+    sources = JSON.parse(IO.read( File.dirname(__FILE__) + '/sources.json'))
+    subject.stub(:sources => sources)
+
+    source = subject.find_source('Sonar', 'Sonar')
+
+    source['name'].should == 'Sonar'
+    source['options']['url'].should == 'http://localhost:9000'
+
+  end
+
+
 
 
 end

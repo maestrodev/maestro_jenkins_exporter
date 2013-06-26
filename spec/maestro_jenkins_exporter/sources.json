@@ -1,0 +1,93 @@
+[
+    {
+        "name": "email.txt.erb",
+        "options": {
+            "path": "/Users/etienne/workspace/CEE/lib/../config/templates/email.txt.erb"
+        },
+        "description": "Template File for Notifications",
+        "projectId": 0,
+        "uri": "/Users/etienne/workspace/CEE/lib/../config/templates/email.txt.erb",
+        "sourceTypeId": 1,
+        "compositionTasks": null,
+        "sourceType": "template",
+        "pluginIds": [],
+        "id": 1,
+        "updatedAt": "2013-05-08T10:48:12-05:00",
+        "createdAt": "2013-05-08T10:48:12-05:00"
+    },
+    {
+        "name": "irc-complete.txt.erb",
+        "options": {
+            "path": "/Users/etienne/workspace/CEE/lib/../config/templates/irc-complete.txt.erb"
+        },
+        "description": "Template File for Notifications",
+        "projectId": 0,
+        "uri": "/Users/etienne/workspace/CEE/lib/../config/templates/irc-complete.txt.erb",
+        "sourceTypeId": 1,
+        "compositionTasks": null,
+        "sourceType": "template",
+        "pluginIds": [],
+        "id": 2,
+        "updatedAt": "2013-05-08T10:48:12-05:00",
+        "createdAt": "2013-05-08T10:48:12-05:00"
+    },
+    {
+        "name": "irc.txt.erb",
+        "options": {
+            "path": "/Users/etienne/workspace/CEE/lib/../config/templates/irc.txt.erb"
+        },
+        "description": "Template File for Notifications",
+        "projectId": 0,
+        "uri": "/Users/etienne/workspace/CEE/lib/../config/templates/irc.txt.erb",
+        "sourceTypeId": 1,
+        "compositionTasks": null,
+        "sourceType": "template",
+        "pluginIds": [],
+        "id": 3,
+        "updatedAt": "2013-05-08T10:48:12-05:00",
+        "createdAt": "2013-05-08T10:48:12-05:00"
+    },
+    {
+        "name": "Jenkins",
+        "options": {
+            "port": "8080",
+            "username": "admin",
+            "host": "localhost",
+            "web_path": "/",
+            "password": "admin"
+        },
+        "description": "Jenkins server",
+        "projectId": 0,
+        "uri": "some uri",
+        "sourceTypeId": 4,
+        "compositionTasks": null,
+        "sourceType": "Jenkins",
+        "pluginIds": [
+            1,
+            2
+        ],
+        "id": 4,
+        "updatedAt": "2013-06-26T10:28:21-05:00",
+        "createdAt": "2013-06-26T10:28:21-05:00"
+    },
+    {
+        "name": "Sonar",
+        "options": {
+            "username": "soandso",
+            "password": "nunya",
+            "url": "http://localhost:9000"
+        },
+        "description": "",
+        "projectId": 0,
+        "uri": "some uri",
+        "sourceTypeId": 5,
+        "compositionTasks": null,
+        "sourceType": "Sonar",
+        "pluginIds": [
+            3
+        ],
+        "id": 5,
+        "updatedAt": "2013-06-26T13:46:00-05:00",
+        "createdAt": "2013-06-26T13:46:00-05:00"
+    }
+]
