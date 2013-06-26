@@ -260,7 +260,9 @@ module MaestroJenkinsExporter
       artifact_id = job_config.xpath('/maven2-moduleset/rootModule/artifactId')[0].content
       task_id = "task_#{sonar_task_id}_2"
       task = {}
+      # TODO: as this never changes, would be better to construct and use a source
       sonar_options = @options['sonar'] || {}
+      raise "Sonar URL is required" unless sonar_options['url']
       task['url'] = sonar_options['url']
       task['username'] = sonar_options['username']
       task['password'] = sonar_options['password']
