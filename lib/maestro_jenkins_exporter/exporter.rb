@@ -29,15 +29,17 @@ module MaestroJenkinsExporter
       views.each do |view|
         view_jobs = jenkins_client.view.list_jobs(view)
         found_jobs << view_jobs
-        logger.warn "View #{view} has #{view_jobs.size} jobs not in a subview" unless view_jobs.empty?
+        logger.warn "View #{view} has #{view_jobs.size} jobs not in a subview: #{view_jobs}" unless view_jobs.empty?
 
         details = view_details(view)
         group = add_group_to_maestro(group_from_view(details))
         # Drill down into each group views and
-        projects = export_projects(details['views'], group)
-        projects.each do |project|
-          project['compositions'].each do |composition|
-            found_jobs << composition['name']
+        if details['views']
+          projects = export_projects(details['views'], group)
+          projects.each do |project|
+            project['compositions'].each do |composition|
+              found_jobs << composition['name']
+            end
           end
         end
       end
@@ -107,6 +109,8 @@ module MaestroJenkinsExporter
 
         # Then we drill down each project and add all the compositions
         export_compositions(jenkins_project['jobs'], maestro_project)
+
+        logger.warn "Additional nesting of views is not supported: #{jenkins_project['views']} in #{view['name']}" if jenkins_project['views']
 
         projects << maestro_project
       end
