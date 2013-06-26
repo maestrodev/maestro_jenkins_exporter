@@ -41,7 +41,7 @@ module MaestroJenkinsExporter
 
     # Returns the task ID for the Jenkins build task
     def jenkins_task_id
-      @jenkins_task_id ||= task_id(@options['jenkins_task_name'] || 'jenkins plugin')
+      @jenkins_task_id ||= task_id(@options['jenkins_task_name'] || 'jenkins sync')
     end
 
     # Returns the task ID for the sonar build task
