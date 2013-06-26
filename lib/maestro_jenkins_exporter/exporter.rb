@@ -33,7 +33,7 @@ module MaestroJenkinsExporter
         view_jobs = jenkins_client.view.list_jobs(view)
         # Group has jobs, so we create it as a project and a group
         unless view_jobs.empty?
-          found_jobs << view_jobs
+          found_jobs.concat view_jobs
 
           maestro_project = add_project_to_maestro(project_from_view(details))
           add_project_to_group(maestro_project, group)
@@ -54,11 +54,13 @@ module MaestroJenkinsExporter
       end
 
       orphaned_jobs = all_jobs - found_jobs
-      logger.warn "There are #{orphaned_jobs.size} jobs not in any views: #{orphaned_jobs}" unless orphaned_jobs.empty?
+      unless orphaned_jobs.empty?
+        logger.warn "There are #{orphaned_jobs.size} jobs not in any views: #{orphaned_jobs}"
 
-      maestro_project = add_project_to_maestro({'name' => 'Other Jenkins Jobs'})
-      orphaned_jobs.each do |job|
-        export_composition(job, maestro_project)
+        maestro_project = add_project_to_maestro({'name' => 'Other Jenkins Jobs'})
+        orphaned_jobs.each do |job|
+          export_composition(job, maestro_project)
+        end
       end
     end
 
