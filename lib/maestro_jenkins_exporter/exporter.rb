@@ -8,19 +8,42 @@ module MaestroJenkinsExporter
 
     def initialize(options={})
       @options = options
+
+      logger.info "Performing dry run of exporter" if dryrun?
+
+      logger.debug "Jenkins task ID to use in Maestro: #{jenkins_task_id}"
+      logger.debug "Sonar task ID to use in Maestro: #{sonar_task_id}"
     end
 
 
     def export
+      all_jobs = jenkins_client.job.list_all
+      logger.info "Mapping #{all_jobs.size} Jenkins jobs"
+
       # First export the top-level views and import into Maestro groups.
       views = list_group_views
+      logger.info "Found #{views.size} top level views in Jenkins to convert to groups"
+
+      found_jobs = []
+
       views.each do |view|
+        view_jobs = jenkins_client.view.list_jobs(view)
+        found_jobs << view_jobs
+        logger.warn "View #{view} has #{view_jobs.size} jobs not in a subview" unless view_jobs.empty?
+
         details = view_details(view)
         group = add_group_to_maestro(group_from_view(details))
         # Drill down into each group views and
-        export_projects(details['views'], group)
+        projects = export_projects(details['views'], group)
+        projects.each do |project|
+          project['compositions'].each do |composition|
+            found_jobs << composition['name']
+          end
+        end
       end
 
+      orphaned_jobs = all_jobs - found_jobs
+      logger.warn "There are #{orphaned_jobs.size} jobs not in any views: #{orphaned_jobs}" unless orphaned_jobs.empty?
     end
 
     private
@@ -45,7 +68,7 @@ module MaestroJenkinsExporter
     end
 
     def jenkins_task_id
-      @jenkins_task_id  ||= maestro_client.jenkins_task_id
+      @jenkins_task_id ||= maestro_client.jenkins_task_id
     end
 
     def sonar_task_id
@@ -53,7 +76,7 @@ module MaestroJenkinsExporter
     end
 
     def logger
-      @logger ||=  Logger.new(STDERR)
+      @logger ||= Logger.new(STDERR)
     end
 
     def dryrun?
@@ -67,6 +90,9 @@ module MaestroJenkinsExporter
     # *group* a maestro group object to associate the new project with.
     #
     def export_projects(views, group)
+      logger.debug "Found #{views.size} views in view #{group['name']}"
+
+      projects = []
 
       views.each do |view|
         # Get the project details from Jenkins, create a maestro project, add it to Maestro and associate with a group
@@ -76,8 +102,11 @@ module MaestroJenkinsExporter
 
         # Then we drill down each project and add all the compositions
         export_compositions(jenkins_project['jobs'], maestro_project)
+
+        projects << maestro_project
       end
 
+      projects
     end
 
     # Given a list of jobs obtained from a Jenkins view, create maestro compositions, associate with given project,
@@ -87,9 +116,15 @@ module MaestroJenkinsExporter
     # *project* the Maestro project where the new composition belongs.
     #
     def export_compositions(jobs, project)
+      logger.debug "Found #{jobs.size} jobs in view #{project['name']}"
+
+      project['compositions'] = []
 
       jobs.each do |job|
-        job_details = jenkins_client.job.list_details(job['name'])
+        # Need job_details to get description element - currently just going to use the job for performance
+        #job_details = jenkins_client.job.list_details(job['name'])
+        job_details = job
+
         job_config = Nokogiri::XML(jenkins_client.job.get_config(job['name']))
         add_composition_to_maestro(composition_from_job(job_details, job_config), project)
       end
@@ -132,6 +167,7 @@ module MaestroJenkinsExporter
 
     def add_composition_to_maestro(composition, project)
       maestro_client.add_composition(project, composition)
+      project['compositions'] << composition
     end
 
     #
@@ -202,7 +238,7 @@ module MaestroJenkinsExporter
     end
 
     def add_sonar_task(values, job_config)
-      group_id =  job_config.xpath('/maven2-moduleset/rootModule/groupId')[0].content
+      group_id = job_config.xpath('/maven2-moduleset/rootModule/groupId')[0].content
       artifact_id = job_config.xpath('/maven2-moduleset/rootModule/artifactId')[0].content
       task_id = "task_#{sonar_task_id}_2"
       task = {}
@@ -219,8 +255,8 @@ module MaestroJenkinsExporter
     end
 
     # Add a new option to the given composition task
-    def add_composition_task_option(composition_task_options, name, required, type, value )
-      option = { 'required' =>  required, 'type' => type, 'value' => value }
+    def add_composition_task_option(composition_task_options, name, required, type, value)
+      option = {'required' => required, 'type' => type, 'value' => value}
       composition_task_options[name]=option
     end
 
