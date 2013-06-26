@@ -27,13 +27,22 @@ module MaestroJenkinsExporter
       found_jobs = []
 
       views.each do |view|
-        view_jobs = jenkins_client.view.list_jobs(view)
-        found_jobs << view_jobs
-        logger.warn "View #{view} has #{view_jobs.size} jobs not in a subview: #{view_jobs}" unless view_jobs.empty?
-
         details = view_details(view)
         group = add_group_to_maestro(group_from_view(details))
-        # Drill down into each group views and
+
+        view_jobs = jenkins_client.view.list_jobs(view)
+        # Group has jobs, so we create it as a project and a group
+        unless view_jobs.empty?
+          found_jobs << view_jobs
+
+          maestro_project = add_project_to_maestro(project_from_view(details))
+          add_project_to_group(maestro_project, group)
+          view_jobs.each do |job|
+            export_composition(job, maestro_project)
+          end
+        end
+
+        # Check for views regardless, even though the Nested Views plugin will only have views or jobs, not both
         if details['views']
           projects = export_projects(details['views'], group)
           projects.each do |project|
@@ -54,10 +63,6 @@ module MaestroJenkinsExporter
     end
 
     private
-
-    def no_groups?
-      @no_groups ||= @options['nogroups']
-    end
 
     def jenkins_client
       @jenkins_client ||= JenkinsApi::Client.new(@options['jenkins'])
@@ -136,7 +141,7 @@ module MaestroJenkinsExporter
     end
 
     def export_composition(job, project)
-        # Need job_details to get description element - currently just going to use the job for performance
+      # Need job_details to get description element - currently just going to use the job for performance
       job_details = jenkins_client.job.list_details(job)
 
       job_config = Nokogiri::XML(jenkins_client.job.get_config(job))
