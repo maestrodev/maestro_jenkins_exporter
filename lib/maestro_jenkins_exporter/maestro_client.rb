@@ -3,6 +3,16 @@ require 'logger'
 
 module MaestroJenkinsExporter
 
+  def self.sanitize_project(project)
+    project['description'] ||= project['name']
+    project['description'] = strip_html(project['description']).slice(0, 255)
+    project
+  end
+
+  def self.strip_html(html)
+    Nokogiri::HTML(html).text
+  end
+
   class MaestroClient
 
     def initialize(options)
@@ -29,10 +39,6 @@ module MaestroJenkinsExporter
       @password||=@options['password']
     end
 
-    def logger
-      @logger ||=  Logger.new(STDERR)
-    end
-
     # Returns the task ID for the Jenkins build task
     def jenkins_task_id
       @jenkins_task_id ||= task_id(@options['jenkins_task_name'] || 'jenkins plugin')
@@ -42,16 +48,6 @@ module MaestroJenkinsExporter
     def sonar_task_id
       @sonar_task_id ||= task_id(@options['sonar_task_name'] || 'Sonar Plugin')
     end
-
-    def task_id(task_name)
-      login unless authenticated?
-      tasks = JSON.parse(RestClient.get(resource_url('tasks'), :cookies => @cookies).body)
-      task_index = tasks.find_index{ |task| task['name'] == task_name }
-      fail "Plugin not installed or misconfigured. Could not find #{task_name} task ID" unless task_index and tasks[task_index]['id']
-      tasks[task_index]['id']
-    end
-
-
 
     # Login to Maestro, save the session cookie
     def login
@@ -105,8 +101,7 @@ module MaestroJenkinsExporter
       login unless authenticated?
       existing_project = find_project(project['name'])
       return existing_project if existing_project
-      project['description'] ||= project['name']
-      project['description'] = strip_html(project['description']).slice(0, 255)
+      MaestroJenkinsExporter.sanitize_project(project)
       begin
         project = JSON.parse(RestClient.post(resource_url('projects'), {:projectName => project['name'], :projectDescription => project['description']}, :cookies => @cookies).body)
       rescue RestClient::Conflict => e
@@ -147,25 +142,37 @@ module MaestroJenkinsExporter
 
     private
 
+    def logger
+      @logger ||=  Logger.new(STDERR)
+    end
+
+    def task_id(task_name)
+      login unless authenticated?
+      tasks = JSON.parse(RestClient.get(resource_url('tasks'), :cookies => @cookies).body)
+      task_index = tasks.find_index{ |task| task['name'] == task_name }
+      fail "Plugin not installed or misconfigured. Could not find #{task_name} task ID" unless task_index and tasks[task_index]['id']
+      tasks[task_index]['id']
+    end
+
     def resource_url(resource)
       logger.debug("resource URL: #{resource}")
       "#{api_url}/#{resource}"
     end
-
-    def strip_html(html)
-      Nokogiri::HTML(html).text
-    end
-
   end
 
   class StubMaestroClient
+    def logger
+      @logger ||=  Logger.new(STDERR)
+    end
+
     def add_group(group)
-      puts "#{group['name']} (#{group['description']})"
+      logger.info "Adding group: #{group['name']} (#{group['description']})"
       group
     end
 
     def add_project(project)
-      puts "  #{project['name']} (#{project['description']})"
+      MaestroJenkinsExporter.sanitize_project(project)
+      logger.info "  Adding project: #{project['name']} (#{project['description']})"
       project
     end
 
@@ -182,8 +189,7 @@ module MaestroJenkinsExporter
     end
 
     def add_composition(project, composition)
-      puts "    #{composition['name']} (#{composition['description']})"
-      puts "      #{composition['values']}"
+      logger.info "    Adding composition: #{composition['name']} (#{composition['description']})"
     end
   end
 
