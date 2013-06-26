@@ -44,6 +44,11 @@ module MaestroJenkinsExporter
 
       orphaned_jobs = all_jobs - found_jobs
       logger.warn "There are #{orphaned_jobs.size} jobs not in any views: #{orphaned_jobs}" unless orphaned_jobs.empty?
+
+      maestro_project = add_project_to_maestro({'name' => 'Other Jenkins Jobs'})
+      orphaned_jobs.each do |job|
+        export_composition(job, maestro_project)
+      end
     end
 
     private
@@ -121,14 +126,17 @@ module MaestroJenkinsExporter
       project['compositions'] = []
 
       jobs.each do |job|
-        # Need job_details to get description element - currently just going to use the job for performance
-        #job_details = jenkins_client.job.list_details(job['name'])
-        job_details = job
-
-        job_config = Nokogiri::XML(jenkins_client.job.get_config(job['name']))
-        add_composition_to_maestro(composition_from_job(job_details, job_config), project)
+        export_composition(job['name'], project)
       end
 
+    end
+
+    def export_composition(job, project)
+        # Need job_details to get description element - currently just going to use the job for performance
+      job_details = jenkins_client.job.list_details(job)
+
+      job_config = Nokogiri::XML(jenkins_client.job.get_config(job))
+      add_composition_to_maestro(composition_from_job(job_details, job_config), project)
     end
 
     #
@@ -167,6 +175,7 @@ module MaestroJenkinsExporter
 
     def add_composition_to_maestro(composition, project)
       maestro_client.add_composition(project, composition)
+      project['compositions'] ||= []
       project['compositions'] << composition
     end
 
@@ -242,7 +251,7 @@ module MaestroJenkinsExporter
       artifact_id = job_config.xpath('/maven2-moduleset/rootModule/artifactId')[0].content
       task_id = "task_#{sonar_task_id}_2"
       task = {}
-      sonar_options = @options['sonar']
+      sonar_options = @options['sonar'] || {}
       task['url'] = sonar_options['url']
       task['username'] = sonar_options['username']
       task['password'] = sonar_options['password']
