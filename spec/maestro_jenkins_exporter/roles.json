@@ -1,0 +1,34 @@
+[
+    {
+        "name": "devts-mygroup-jenkins-configurer",
+        "resourcePermissions": [
+            {
+                "resource": "1",
+                "permission": "view-build-project-group"
+            },
+            {
+                "resource": "1",
+                "permission": "add-build-project-group"
+            },
+            {
+                "resource": "1",
+                "permission": "edit-build-project-group"
+            },
+            {
+                "resource": "1",
+                "permission": "delete-build-project-group"
+            }
+
+        ]
+    },
+    {
+        "name": "devts-mygroup-jenkins-user",
+        "resourcePermissions": [
+            {
+                "resource": "1",
+                "permission": "view-build-project-group"
+            }
+        ]
+    }
+
+]

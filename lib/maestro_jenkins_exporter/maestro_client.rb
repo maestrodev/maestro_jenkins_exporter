@@ -134,8 +134,6 @@ module MaestroJenkinsExporter
       response = RestClient.post(resource_url("projects/#{project['id']}/compositions?templateId=-1"), composition.to_json, :content_type => :json, :cookies => @cookies)
       # re-add the values and save the tasks
       composition['values']=values
-      puts composition.to_json
-      puts "#{response.headers[:location]}/tasks/save"
       RestClient.post("#{response.headers[:location]}/tasks/save", composition.to_json, :content_type => :json, :cookies => @cookies)
       logger.info("Added composition '#{composition['name']}' to project '#{project['name']}'")
     rescue RestClient::Conflict => e
@@ -158,6 +156,15 @@ module MaestroJenkinsExporter
       return nil
     end
 
+    def create_roles(roles)
+
+      login unless authenticated?
+      roles.each do |role|
+        RestClient.post(resource_url('roles'), role.to_json, :content_type => :json, :cookies => @cookies)
+        logger.info "Created new role #{role['name']}"
+      end
+
+    end
 
     private
 

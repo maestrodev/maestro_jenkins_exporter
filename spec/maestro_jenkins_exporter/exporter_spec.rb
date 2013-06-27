@@ -102,5 +102,35 @@ describe MaestroJenkinsExporter::Exporter do
 
   end
 
+  describe 'role creation' do
+    before(:each) do
+      @maestro_client = double('Maestro Client')
+      subject.stub(:maestro_client => @maestro_client)
+    end
+
+    it 'should add resource permissions to a given role' do
+      role = { 'name' => 'some-role', 'resourcePermissions' => [] }
+      resource_id = 1
+      permission = 'some-permission'
+
+      subject.add_resource_permission_to_role(resource_id,permission,role)
+
+      role['resourcePermissions'].length.should == 1
+
+    end
+
+    it 'should create roles for the given group' do
+      group = { 'name' => 'My Group', 'id' => 1 }
+      @maestro_client.should_receive(:create_roles).with(canned_response('roles.json'))
+      subject.add_roles_to_group(group)
+    end
+
+
+
+
+  end
+
+
+
 
 end

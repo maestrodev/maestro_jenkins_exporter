@@ -10,13 +10,14 @@ module MaestroJenkinsExporter
       @options = options
 
       logger.info "Performing dry run of exporter" if dryrun?
-
-      logger.debug "Jenkins task ID to use in Maestro: #{jenkins_task_id}"
-      logger.debug "Sonar task ID to use in Maestro: #{sonar_task_id}"
     end
 
 
     def export
+
+      logger.debug "Jenkins task ID to use in Maestro: #{jenkins_task_id}"
+      logger.debug "Sonar task ID to use in Maestro: #{sonar_task_id}"
+
       all_jobs = list_all_jobs
       logger.info "Mapping #{all_jobs.size} Jenkins jobs"
 
@@ -62,6 +63,29 @@ module MaestroJenkinsExporter
           export_composition(job, maestro_project)
         end
       end
+    end
+
+    def add_roles_to_group(group)
+      # We need two roles: devts-groupName-jenkins-configurer' and devts-groupName-jenkins-user
+      name = group['name'].downcase
+      # Get rid of spaces
+      name = name.split.join
+      configurer_role = { 'name' => "devts-#{name}-jenkins-configurer", 'resourcePermissions' => []  }
+      user_role = { 'name' => "devts-#{name}-jenkins-user", 'resourcePermissions' => [] }
+      # View permissions: view-build-project-group
+      # Edit permissions: view-build-project-group,add-build-project-group, edit-build-project-group, delete-build-project-group
+      add_resource_permission_to_role(group['id'], 'view-build-project-group', configurer_role)
+      add_resource_permission_to_role(group['id'], 'add-build-project-group', configurer_role)
+      add_resource_permission_to_role(group['id'], 'edit-build-project-group', configurer_role)
+      add_resource_permission_to_role(group['id'], 'delete-build-project-group', configurer_role)
+      add_resource_permission_to_role(group['id'], 'view-build-project-group', user_role)
+
+      maestro_client.create_roles([ configurer_role, user_role ])
+
+    end
+
+    def add_resource_permission_to_role(resource_id, permission, role)
+      role['resourcePermissions'] << { 'resource' => resource_id.to_s, 'permission' => permission }
     end
 
     private
@@ -203,7 +227,9 @@ module MaestroJenkinsExporter
 
     def add_group_to_maestro(group)
       # Add to Maestro if it doesn't exist. Return the updated data model (we'll need the group ID).
-      maestro_client.add_group(group)
+      group = maestro_client.add_group(group)
+      add_roles_to_group(group)
+      group
     end
 
     def add_project_to_maestro(project)
@@ -219,6 +245,8 @@ module MaestroJenkinsExporter
       project['compositions'] ||= []
       project['compositions'] << composition
     end
+
+
 
     #
     # Mapping methods
