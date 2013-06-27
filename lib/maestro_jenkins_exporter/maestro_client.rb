@@ -160,8 +160,12 @@ module MaestroJenkinsExporter
 
       login unless authenticated?
       roles.each do |role|
-        RestClient.post(resource_url('roles'), role.to_json, :content_type => :json, :cookies => @cookies)
-        logger.info "Created new role #{role['name']}"
+        begin
+          RestClient.post(resource_url('roles'), role.to_json, :content_type => :json, :cookies => @cookies)
+          logger.info "Created new role #{role['name']}"
+        rescue RestClient::Conflict => e
+          logger.info "Duplicate role #{role['name']}"
+        end
       end
 
     end
