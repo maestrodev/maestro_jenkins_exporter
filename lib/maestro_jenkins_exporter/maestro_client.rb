@@ -230,6 +230,12 @@ module MaestroJenkinsExporter
     def add_composition(project, composition)
       logger.info "    Adding composition: #{composition['name']} (#{composition['description']})"
     end
+
+    def create_roles(roles)
+      roles.each do |role|
+        logger.info "  Create/verify role #{role['name']}"
+      end
+    end
   end
 
 end
