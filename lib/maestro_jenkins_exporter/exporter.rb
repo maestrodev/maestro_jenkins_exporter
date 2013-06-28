@@ -241,6 +241,7 @@ module MaestroJenkinsExporter
       <endpoints>
         <com.tikal.hudson.plugins.notification.Endpoint>
           <protocol>HTTP</protocol>
+          <format>JSON</format>
           <url>#{maestro_url}</url>
         </com.tikal.hudson.plugins.notification.Endpoint>
       </endpoints>
