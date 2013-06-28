@@ -196,6 +196,18 @@ module MaestroJenkinsExporter
       @logger = logger
     end
 
+    def base_url
+      "http://localhost:8080"
+    end
+
+    def username
+      nil
+    end
+
+    def password
+      nil
+    end
+
     def verbose?
       @verbose ||= @options['verbose']
     end

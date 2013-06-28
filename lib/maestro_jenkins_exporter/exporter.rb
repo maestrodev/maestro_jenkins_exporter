@@ -129,6 +129,10 @@ module MaestroJenkinsExporter
       @sonar_source ||= maestro_client.find_source('Sonar', @sonar_options['source_name'])
     end
 
+    def notification_plugin_version
+      @plugin_version = @options['jenkins']['notification_plugin_version'] || "1.5"
+    end
+
     def maestro_client
       if @maestro_client.nil?
         if dryrun?
@@ -213,6 +217,43 @@ module MaestroJenkinsExporter
 
       job_config = Nokogiri::XML(jenkins_client.job.get_config(job))
       add_composition_to_maestro(composition_from_job(job_details, job_config), project)
+
+      add_notification_plugin_to_job(job, job_config)
+    end
+
+    def add_notification_plugin_to_job(job, job_config)
+
+      uri = URI.parse("#{@maestro_client.base_url}/lucee/api/v0/triggers/jenkins")
+      uri.user = @maestro_client.username
+      uri.password = @maestro_client.password
+      maestro_url = uri.to_s
+
+      puts maestro_url
+      puts notification_plugin_version
+
+      if job_config.at_xpath('//*/properties/com.tikal.hudson.plugins.notification.HudsonNotificationProperty').nil?
+        logger.info "Adding Notification plugin to #{job}"
+
+        properties = job_config.at_xpath('//*/properties')
+        if properties.nil?
+          properties = job_config.root.add_child('properties')
+        end
+
+        properties << %Q[
+    <com.tikal.hudson.plugins.notification.HudsonNotificationProperty plugin="notification@#{notification_plugin_version}">
+      <endpoints>
+        <com.tikal.hudson.plugins.notification.Endpoint>
+          <protocol>HTTP</protocol>
+          <url>#{maestro_url}</url>
+        </com.tikal.hudson.plugins.notification.Endpoint>
+      </endpoints>
+    </com.tikal.hudson.plugins.notification.HudsonNotificationProperty>
+  ]
+
+        @jenkins_client.job.post_config(job, job_config.to_s) unless dryrun?
+      else
+        logger.info "Not adding Notification plugin for #{job} as it already exists"
+      end
     end
 
     #
