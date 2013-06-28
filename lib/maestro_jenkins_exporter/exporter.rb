@@ -334,13 +334,18 @@ module MaestroJenkinsExporter
       task_id = "task_#{jenkins_task_id}_1"
       task = {}
       jenkins_options = @options['jenkins']
-      task['source'] = (jenkins_options['source_name'] and jenkins_source) ? "#{jenkins_source['id']}" : '-1'
-      task['host'] = jenkins_options['server_ip']
-      task['port'] = jenkins_options['server_port']
-      # TODO: u/p might not want to be passed through, even if needed to retrieve things from Jenkins. Make configurable
-      #task['username'] = jenkins_options['username']
-      #task['password'] = jenkins_options['password']
-      task['web_path'] = jenkins_options['jenkins_path']
+      if (jenkins_options['source_name'] and jenkins_source)
+        task['source'] = "#{jenkins_source['id']}"
+      else
+        task['source'] = '-1'
+        task['host'] = jenkins_options['server_ip']
+        task['port'] = jenkins_options['server_port']
+        # TODO: u/p might not want to be passed through, even if needed to retrieve things from Jenkins. Make configurable
+        #task['username'] = jenkins_options['username']
+        #task['password'] = jenkins_options['password']
+        task['web_path'] = jenkins_options['jenkins_path']
+      end
+
       task['job'] = job['name']
       task['scm_url'] = ''
       task['use_ssl'] = jenkins_options['ssl']
@@ -369,12 +374,15 @@ module MaestroJenkinsExporter
       task_id = "task_#{sonar_task_id}_2"
       task = {}
       sonar_options = @options['sonar'] || {}
-      task['source'] = (sonar_options['source_name'] and sonar_source) ? sonar_source['id'] :  '-1'
-
-      raise "Sonar URL is required" unless sonar_options['url']
-      task['url'] = sonar_options['url']
-      task['username'] = sonar_options['username']
-      task['password'] = sonar_options['password']
+      if sonar_options['source_name'] and sonar_source
+        task['source'] = sonar_source['id']
+      else
+        task['source'] = '-1'
+        raise "Sonar URL is required" unless sonar_options['url']
+        task['url'] = sonar_options['url']
+        task['username'] = sonar_options['username']
+        task['password'] = sonar_options['password']
+      end
       task['projectKey'] = "#{group_id}:#{artifact_id}"
       task['position'] = 2
       values[task_id] = task
