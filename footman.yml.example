@@ -18,6 +18,8 @@ maestro:
   api_url: /api/v1
   username: admin
   password: admin1
+  lucee_username: maestro
+  lucee_password: maestro
 
 role_template:
   write: {{name}}-developer

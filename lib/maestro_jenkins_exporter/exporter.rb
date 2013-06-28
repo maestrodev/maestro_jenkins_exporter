@@ -224,8 +224,8 @@ module MaestroJenkinsExporter
     def add_notification_plugin_to_job(job, job_config)
 
       uri = URI.parse("#{@maestro_client.base_url}/lucee/api/v0/triggers/jenkins")
-      uri.user = @maestro_client.username
-      uri.password = @maestro_client.password
+      uri.user = @maestro_client.lucee_username
+      uri.password = @maestro_client.lucee_password
       maestro_url = uri.to_s
 
       if job_config.at_xpath('//*/properties/com.tikal.hudson.plugins.notification.HudsonNotificationProperty').nil?

@@ -40,6 +40,16 @@ module MaestroJenkinsExporter
       @password||=@options['password']
     end
 
+    # Returns the Maestro LuCEE login username
+    def lucee_username
+      @lucee_username||=@options['lucee_username']
+    end
+
+    # Returns the Maestro LuCEE login password
+    def lucee_password
+      @lucee_password||=@options['lucee_password']
+    end
+
     # Returns the task ID for the Jenkins build task
     def jenkins_task_id
       @jenkins_task_id ||= task_id(@options['jenkins_task_name'] || 'jenkins sync')
@@ -205,6 +215,14 @@ module MaestroJenkinsExporter
     end
 
     def password
+      nil
+    end
+
+    def lucee_username
+      nil
+    end
+
+    def lucee_password
       nil
     end
 
