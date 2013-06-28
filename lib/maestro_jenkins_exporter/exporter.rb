@@ -228,9 +228,6 @@ module MaestroJenkinsExporter
       uri.password = @maestro_client.password
       maestro_url = uri.to_s
 
-      puts maestro_url
-      puts notification_plugin_version
-
       if job_config.at_xpath('//*/properties/com.tikal.hudson.plugins.notification.HudsonNotificationProperty').nil?
         logger.info "Adding Notification plugin to #{job}"
 
