@@ -1,6 +1,6 @@
 [
     {
-        "name": "devts-mygroup-jenkins-configurer",
+        "name": "mygroup-developer",
         "resourcePermissions": [
             {
                 "resource": "1",
@@ -22,7 +22,7 @@
         ]
     },
     {
-        "name": "devts-mygroup-jenkins-user",
+        "name": "mygroup-user",
         "resourcePermissions": [
             {
                 "resource": "1",

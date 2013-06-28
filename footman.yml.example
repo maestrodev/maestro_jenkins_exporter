@@ -17,3 +17,7 @@ maestro:
   api_url: /api/v1
   username: admin
   password: admin1
+
+role_template:
+  write: {{name}}-developer
+  read: {{name}}-user

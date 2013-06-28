@@ -66,21 +66,26 @@ module MaestroJenkinsExporter
     end
 
     def add_roles_to_group(group)
-      # We need two roles: devts-groupName-jenkins-configurer' and devts-groupName-jenkins-user
+      # We need two roles: read (user), write/execute (developer)
       name = group['name'].downcase
       # Get rid of spaces
       name = name.split.join
-      configurer_role = { 'name' => "devts-#{name}-jenkins-configurer", 'resourcePermissions' => []  }
-      user_role = { 'name' => "devts-#{name}-jenkins-user", 'resourcePermissions' => [] }
+
+      role_template = @options['role_template'] || {}
+      role_template_read = role_template['read'] || '{{name}}-user'
+      role_template_write = role_template['write'] || '{{name}}-developer'
+
+      write_role = { 'name' => role_template_write.gsub('{{name}}', name), 'resourcePermissions' => []  }
+      read_role = { 'name' => role_template_read.gsub('{{name}}', name), 'resourcePermissions' => [] }
       # View permissions: view-build-project-group
       # Edit permissions: view-build-project-group,add-build-project-group, edit-build-project-group, delete-build-project-group
-      add_resource_permission_to_role(group['id'], 'view-build-project-group', configurer_role)
-      add_resource_permission_to_role(group['id'], 'add-build-project-group', configurer_role)
-      add_resource_permission_to_role(group['id'], 'edit-build-project-group', configurer_role)
-      add_resource_permission_to_role(group['id'], 'delete-build-project-group', configurer_role)
-      add_resource_permission_to_role(group['id'], 'view-build-project-group', user_role)
+      add_resource_permission_to_role(group['id'], 'view-build-project-group', write_role)
+      add_resource_permission_to_role(group['id'], 'add-build-project-group', write_role)
+      add_resource_permission_to_role(group['id'], 'edit-build-project-group', write_role)
+      add_resource_permission_to_role(group['id'], 'delete-build-project-group', write_role)
+      add_resource_permission_to_role(group['id'], 'view-build-project-group', read_role)
 
-      maestro_client.create_roles([ configurer_role, user_role ])
+      maestro_client.create_roles([ write_role, read_role ])
 
     end
 
