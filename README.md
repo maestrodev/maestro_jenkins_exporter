@@ -7,6 +7,12 @@ mapped to Maestro projects. Jobs listed in  the second-level views are mapped
 to compositions. If any of the jobs in Jenkins has a an already existing
 matching composition in Maestro, it will be skipped.
 
+## Sonar Integration
+
+Jobs that are configured as Maven jobs and have a Sonar post-build step will cause the import/export process to add an
+additional Sonar task to the composition. When run, this task will grab the latest data form the Sonar server to update
+the dashboard information in Maestro.
+
 ## Execution
 
 To run the ruby application from this directory:
@@ -37,11 +43,41 @@ jenkins:
   ssl: false
   username: admin
   password: admin
+sonar:
+  url: http://localhost:9000
+  username: admin
+  password: admin
 maestro:
   base_url: http://localhost:8888
   api_url: /api/v1
   username: replace
   password: replace
+role_template:
+  write: "{{name}}-developer"
+  read: "{{name}}-user"
+```
+
+### Using Maestro Sources
+
+You can also use the parameters configured by a Maestro Source entry. Here is an example configuration file that uses
+the information contained in the sources named "Jenkins" and "Sonar"
+
+
+```
+---
+jenkins:
+  source_name: Jenkins
+  ssl: false
+sonar:
+  source_name: Sonar
+maestro:
+  base_url: http://localhost:8888
+  api_url: /api/v1
+  username: replace
+  password: replace
+role_template:
+  write: "{{name}}-developer"
+  read: "{{name}}-user"
 ```
 
 To run the export/import process, simply invoke the `footman` command. It
@@ -63,3 +99,4 @@ jobs -> compositions (ungrouped project)
 
 Further nesting of views will be ignored with a message in the output, and any jobs will be added to the ungrouped
 project.
+
