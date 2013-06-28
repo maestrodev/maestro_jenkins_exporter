@@ -15,8 +15,9 @@ module MaestroJenkinsExporter
 
   class MaestroClient
 
-    def initialize(options)
+    def initialize(options, logger)
       @options = options
+      @logger = logger
     end
 
     # Returns the base URL that includes scheme, host and port.
@@ -173,7 +174,7 @@ module MaestroJenkinsExporter
     private
 
     def logger
-      @logger ||=  Logger.new(STDERR)
+      @logger
     end
 
     def task_id(task_name)
@@ -191,8 +192,16 @@ module MaestroJenkinsExporter
   end
 
   class StubMaestroClient
+    def initialize(logger)
+      @logger = logger
+    end
+
+    def verbose?
+      @verbose ||= @options['verbose']
+    end
+
     def logger
-      @logger ||=  Logger.new(STDERR)
+      @logger
     end
 
     def add_group(group)

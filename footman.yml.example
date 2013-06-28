@@ -21,3 +21,6 @@ maestro:
 role_template:
   write: {{name}}-developer
   read: {{name}}-user
+
+#verbose: true
+#dryrun: true

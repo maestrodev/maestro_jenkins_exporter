@@ -96,7 +96,7 @@ module MaestroJenkinsExporter
     private
 
     def list_all_jobs
-      all_jobs = jenkins_client.job.list_all
+      jenkins_client.job.list_all
     end
 
     def jenkins_client
@@ -132,9 +132,9 @@ module MaestroJenkinsExporter
     def maestro_client
       if @maestro_client.nil?
         if dryrun?
-          @maestro_client = MaestroJenkinsExporter::StubMaestroClient.new
+          @maestro_client = MaestroJenkinsExporter::StubMaestroClient.new(logger)
         else
-          @maestro_client = MaestroJenkinsExporter::MaestroClient.new(@options['maestro'])
+          @maestro_client = MaestroJenkinsExporter::MaestroClient.new(@options['maestro'], logger)
         end
       end
       @maestro_client
@@ -150,6 +150,12 @@ module MaestroJenkinsExporter
 
     def logger
       @logger ||= Logger.new(STDERR)
+      @logger.level = Logger::INFO unless verbose?
+      @logger
+    end
+
+    def verbose?
+      @verbose ||= @options['verbose']
     end
 
     def dryrun?

@@ -17,7 +17,7 @@ describe MaestroJenkinsExporter::MaestroClient do
                 'maestro_username' => 'admin',
                 'maestro_password'=> 'admin1'
     }
-    MaestroJenkinsExporter::MaestroClient.new(options)
+    MaestroJenkinsExporter::MaestroClient.new(options, Logger.new(STDERR))
   end
 
   before(:all) { JsonSpec.directory= File.dirname(__FILE__) }
