@@ -126,7 +126,7 @@ module MaestroJenkinsExporter
     end
 
     def sonar_source
-      @sonar_source ||= maestro_client.find_source('Sonar', @sonar_options['source_name'])
+      @sonar_source ||= maestro_client.find_source('Sonar', @options['sonar']['source_name'])
     end
 
     def notification_plugin_version
