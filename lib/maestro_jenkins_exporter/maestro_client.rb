@@ -127,7 +127,7 @@ module MaestroJenkinsExporter
     def add_project_to_group(project, group)
       group_projects = group['projects']
       unless group_projects.nil? or group_projects.empty?
-        return if group_projects.find_index{ |gp| gp['id'] == project['id']}
+        return if group_projects.find_index { |gp| gp['id'] == project['id'] }
       end
 
       login unless authenticated?
@@ -190,7 +190,7 @@ module MaestroJenkinsExporter
     def task_id(task_name)
       login unless authenticated?
       tasks = JSON.parse(RestClient.get(resource_url('tasks'), :cookies => @cookies).body)
-      task_index = tasks.find_index{ |task| task['name'] == task_name }
+      task_index = tasks.find_index { |task| task['name'] == task_name }
       fail "Plugin not installed or misconfigured. Could not find #{task_name} task ID" unless task_index and tasks[task_index]['id']
       tasks[task_index]['id']
     end
