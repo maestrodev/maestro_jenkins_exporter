@@ -153,8 +153,11 @@ module MaestroJenkinsExporter
 
     def find_source(type, name)
       selected_sources = sources.select { |source| source['sourceType'] == type and source['name'] == name }
-      return selected_sources[0] if selected_sources and selected_sources.length > 0
-      return nil
+      unless selected_sources and selected_sources.length > 0
+        fail "Unable to find requested source '#{name}' of type '#{type}'"
+      end
+      logger.info "Found source #{name} (#{selected_sources[0]}) for #{type}"
+      selected_sources[0]
     end
 
     def sources
