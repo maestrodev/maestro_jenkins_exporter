@@ -1,3 +1,6 @@
+require 'nokogiri'
+
 module MaestroJenkinsExporter
-  VERSION = "0.0.1"
+  pom = Nokogiri::XML(IO.read('pom.xml'))
+  VERSION = pom.at_xpath('/xmlns:project/xmlns:version').text.gsub('-SNAPSHOT','.snapshot')
 end

@@ -20,6 +20,6 @@ Warbler::Task.new
 CLEAN.include('pkg')
 CLOBBER.include('.bundle', '.config', 'coverage', 'InstalledFiles', 'spec/reports', 'rdoc', 'test', 'tmp')
 
-task :default => [:clean, :spec, :build]
+task :default => [:clean, :spec, :jar]
 
 RSpec::Core::RakeTask.new
