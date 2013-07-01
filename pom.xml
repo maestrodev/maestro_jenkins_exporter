@@ -9,6 +9,11 @@
   <artifactId>maestro-jenkins-exporter</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
+  <scm>
+    <connection>scm:git:git@github.com:maestrodev/maestro_jenkins_exporter.git</connection>
+    <developerConnection>scm:git:git@github.com:maestrodev/maestro_jenkins_exporter.git</developerConnection>
+    <url>https://github.com:maestrodev/maestro_jenkins_exporter</url>
+  </scm>
   <build>
     <plugins>
       <plugin>
