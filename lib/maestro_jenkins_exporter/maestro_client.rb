@@ -260,6 +260,19 @@ module MaestroJenkinsExporter
       2
     end
 
+    def find_source(type, name)
+      case type
+        when "jenkins"
+          {'id' => 1, 'options' => {'host' => 'jenkinshost.example.com',
+                                    'port' => '8080',
+                                    'web_path' => '/',
+                                    'username' => 'admin',
+                                    'password' => 'admin'}}
+        when "sonar"
+          {'id' => 2}
+      end
+    end
+
     def add_composition(project, composition)
       logger.info "    Adding composition: #{composition['name']} (#{composition['description']})"
     end
