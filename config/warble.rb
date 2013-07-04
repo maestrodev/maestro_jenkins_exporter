@@ -17,7 +17,7 @@ Warbler::Config.new do |config|
   # config.includes = FileList["db"]
 
   # Additional files/directories to exclude
-  # config.excludes = FileList["lib/tasks/*"]
+  config.excludes = FileList["maestro_jenkins_exporter/*.yml", "maestro_jenkins_exporter/spec/**", "maestro_jenkins_exporter/*.jar"]
 
   # Additional Java .jar files to include.  Note that if .jar files are placed
   # in lib (and not otherwise excluded) then they need not be mentioned here.
@@ -74,7 +74,7 @@ Warbler::Config.new do |config|
   config.gem_excludes = [/^(test|tests|spec)\//]
 
   # Pathmaps for controlling how application files are copied into the archive
-  # config.pathmaps.application = ["WEB-INF/%p"]
+  config.pathmaps.application = ["maestro_jenkins_exporter/%p"]
 
   # Name of the archive (without the extension). Defaults to the basename
   # of the project directory.

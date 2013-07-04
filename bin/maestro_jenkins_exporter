@@ -10,8 +10,12 @@ end
 require 'maestro_jenkins_exporter'
 require 'yaml'
 
+config_file = ["maestro_jenkins_exporter.yml", "config.yml", "footman.yml"].select { |f| File.exist?(f) }.first
 
-options = YAML.load(File.open("footman.yml"))
+fail "Unable to find configuration file maestro_jenkins_exporter.yml in the current directory - please refer to the README for configuration instructions" unless config_file
+
+puts "Using configuration file: #{config_file}"
+options = YAML.load(File.open(config_file))
 
 # TODO: summarise options if being verbose
 # TODO: command line options to override options: dry-run, verbose, build

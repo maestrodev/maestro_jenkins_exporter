@@ -19,7 +19,7 @@ To run the ruby application from this directory:
 
 ```
 bundle install
-./bin/footman
+./bin/maestro_jenkins_exporter
 ```
 
 To run the downloaded executable JAR instead, simply use:
@@ -30,8 +30,9 @@ java -jar maestro_jenkins_exporter.jar
 
 ## Usage
 
-The binary to run the export process is called footman. Footman must be
-configured with a YAML file. It looks for a file named `footman.yml` in the
+The binary to run the export process is called maestro_jenkins_exporter. It must be
+configured with a YAML file. It looks for a file named
+`maestro_jenkins_exporter.yml` in the
 local directory. This file should look like so:
 
 ```
@@ -80,7 +81,7 @@ role_template:
   read: "{{name}}-user"
 ```
 
-To run the export/import process, simply invoke the `footman` command. It
+To run the export/import process, simply invoke the `maestro_jenkins_exporter` command. It
 will connect to Jenkins and Maestro and import the job data.
 
 ## Structure
