@@ -12,12 +12,13 @@ Warbler::Config.new do |config|
 
   # Application directories to be included in the webapp.
   # config.dirs = %w(app config db lib log script vendor tmp)
+  config.dirs = %w(bin config lib)
 
   # Additional files/directories to include, above those in config.dirs
-  # config.includes = FileList["db"]
+  config.includes = FileList["pom.xml", "LICENSE.txt"]
 
   # Additional files/directories to exclude
-  config.excludes = FileList["maestro_jenkins_exporter/*.yml", "maestro_jenkins_exporter/spec/**", "maestro_jenkins_exporter/*.jar"]
+  # config.excludes = FileList["lib/tasks/*"]
 
   # Additional Java .jar files to include.  Note that if .jar files are placed
   # in lib (and not otherwise excluded) then they need not be mentioned here.
