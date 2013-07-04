@@ -2,6 +2,10 @@
 
 $LOAD_PATH.unshift(File.dirname(__FILE__) + '/../lib') unless $LOAD_PATH.include?(File.dirname(__FILE__) + '/../lib')
 
+# Detect running Warbler JAR, and if so unset GEM_PATH
+if ENV['GEM_HOME'] =~ /^file:.*\.jar!/
+  ENV.delete 'GEM_PATH'
+end
 
 require 'maestro_jenkins_exporter'
 require 'yaml'

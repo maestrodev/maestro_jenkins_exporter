@@ -91,7 +91,7 @@ Warbler::Config.new do |config|
 
   # When set to true, Warbler will override the value of ENV['GEM_HOME'] even it
   # has already been set.
-  # config.override_gem_home = false
+  config.override_gem_home = true
 
   # === War files only below here ===
 
