@@ -8,15 +8,31 @@ module MaestroJenkinsExporter
 
     def initialize(options={})
       @options = options
-
-      logger.info "Performing dry run of exporter" if dryrun?
     end
 
 
     def export
+      logger.info "Performing dry run of exporter" if dryrun?
 
-      logger.debug "Jenkins task ID to use in Maestro: #{jenkins_task_id}"
-      logger.debug "Sonar task ID to use in Maestro: #{sonar_task_id}"
+      # password omitted from logging
+      uri = URI::HTTP.new(jenkins_options['ssl'] ? "https" : "http", jenkins_options['username'],
+                          jenkins_options['server_ip'], jenkins_options['server_port'], nil,
+                          jenkins_options['jenkins_path'], nil, nil, nil)
+      logger.info "Jenkins server: #{uri.to_s}"
+      logger.info "Jenkins Notification Plugin version assumed: #{notification_plugin_version}"
+
+      logger.info "Jenkins source to use: #{jenkins_source['name']}" if jenkins_source
+      logger.info "Sonar source to use: #{sonar_source['name']}" if sonar_source
+
+      unless dryrun?
+        logger.info "Jenkins task ID to use in Maestro: #{jenkins_task_id}"
+        logger.info "Sonar task ID to use in Maestro: #{sonar_task_id}"
+
+        uri = URI.parse(maestro_client.api_url)
+        uri.userinfo = maestro_client.username
+        logger.info "Maestro API URL: #{uri.to_s}"
+        logger.info "LuCEE username: #{maestro_client.lucee_username}"
+      end
 
       all_jobs = list_all_jobs
       logger.info "Mapping #{all_jobs.size} Jenkins jobs"
@@ -75,8 +91,8 @@ module MaestroJenkinsExporter
       role_template_read = role_template['read'] || '{{name}}-user'
       role_template_write = role_template['write'] || '{{name}}-developer'
 
-      write_role = { 'name' => role_template_write.gsub('{{name}}', name), 'resourcePermissions' => []  }
-      read_role = { 'name' => role_template_read.gsub('{{name}}', name), 'resourcePermissions' => [] }
+      write_role = {'name' => role_template_write.gsub('{{name}}', name), 'resourcePermissions' => []}
+      read_role = {'name' => role_template_read.gsub('{{name}}', name), 'resourcePermissions' => []}
       # View permissions: view-build-project-group
       # Edit permissions: view-build-project-group,add-build-project-group, edit-build-project-group, delete-build-project-group
       add_resource_permission_to_role(group['id'], 'view-build-project-group', write_role)
@@ -85,12 +101,12 @@ module MaestroJenkinsExporter
       add_resource_permission_to_role(group['id'], 'delete-build-project-group', write_role)
       add_resource_permission_to_role(group['id'], 'view-build-project-group', read_role)
 
-      maestro_client.create_roles([ write_role, read_role ])
+      maestro_client.create_roles([write_role, read_role])
 
     end
 
     def add_resource_permission_to_role(resource_id, permission, role)
-      role['resourcePermissions'] << { 'resource' => resource_id.to_s, 'permission' => permission }
+      role['resourcePermissions'] << {'resource' => resource_id.to_s, 'permission' => permission}
     end
 
     private
@@ -104,17 +120,16 @@ module MaestroJenkinsExporter
     end
 
     def jenkins_options
-      jenkins_options =  @options['jenkins']
+      jenkins_options = @options['jenkins']
       if jenkins_options['source_name']
         source = jenkins_source
         if source
-          jenkins_options = { 'server_ip' => source['options']['host'],
-                              'server_port' => source['options']['port'],
-                              'jenkins_path' => source['options']['web_path'],
-                              'username' => source['options']['username'],
-                              'password' => source['options']['password'],
-                              # TODO add this to Jenkins source
-                              'ssl' => jenkins_options['ssl']
+          jenkins_options = {'server_ip' => source['options']['host'],
+                             'server_port' => source['options']['port'],
+                             'jenkins_path' => source['options']['web_path'],
+                             'username' => source['options']['username'],
+                             'password' => source['options']['password'],
+                             'ssl' => source['options']['use_ssl']
           }
         end
       end
@@ -153,7 +168,12 @@ module MaestroJenkinsExporter
     end
 
     def logger
-      @logger ||= Logger.new(STDERR)
+      @logger ||= Logger.new(STDOUT)
+
+      @logger.formatter = proc { |severity, datetime, progname, msg|
+        "%s [%-5s] %s\n" % [datetime.strftime('%H:%M:%S'), severity, msg]
+      }
+
       @logger.level = Logger::INFO unless verbose?
       @logger
     end
@@ -295,7 +315,6 @@ module MaestroJenkinsExporter
       project['compositions'] ||= []
       project['compositions'] << composition
     end
-
 
 
     #

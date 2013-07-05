@@ -238,13 +238,13 @@ module MaestroJenkinsExporter
     end
 
     def add_group(group)
-      logger.info "Adding group: #{group['name']} (#{group['description']})"
+      logger.info "Adding group: #{group['name']} (#{wrap_description(group['description'])})"
       group
     end
 
     def add_project(project)
       MaestroJenkinsExporter.sanitize_project(project)
-      logger.info "  Adding project: #{project['name']} (#{project['description']})"
+      logger.info "  Adding project: #{project['name']} (#{wrap_description(project['description'])})"
       project
     end
 
@@ -274,13 +274,19 @@ module MaestroJenkinsExporter
     end
 
     def add_composition(project, composition)
-      logger.info "    Adding composition: #{composition['name']} (#{composition['description']})"
+      logger.info "    Adding composition: #{composition['name']} (#{wrap_description(composition['description'])})"
     end
 
     def create_roles(roles)
       roles.each do |role|
         logger.info "  Create/verify role #{role['name']}"
       end
+    end
+
+    private
+
+    def wrap_description(desc)
+      desc.nil? || desc == '' ? '<no description>' : desc
     end
   end
 
