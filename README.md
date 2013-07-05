@@ -84,6 +84,29 @@ role_template:
 To run the export/import process, simply invoke the `maestro_jenkins_exporter` command. It
 will connect to Jenkins and Maestro and import the job data.
 
+## Filtering
+
+You may wish to only process a subset of views or jobs from the Jenkins server. These can be listed in the configuration
+file using either entire names or a regex:
+
+```
+include_views:
+  - Group 1
+  - Group 2
+
+exclude_views:
+  - Test .*
+
+include_jobs:
+  - .*-CI
+
+exclude_jobs:
+  - Bad-CI
+```
+
+If an "include" list is provided, only those views or jobs will be selected. In addition, the exclude list will be
+applied afterwards. If no include list is provided, only the exclude list will be applied.
+
 ## Structure
 
 To simplify the initial export process, this tool currently relies on

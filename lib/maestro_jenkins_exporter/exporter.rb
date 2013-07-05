@@ -38,45 +38,54 @@ module MaestroJenkinsExporter
       logger.info "Mapping #{all_jobs.size} Jenkins jobs"
 
       # First export the top-level views and import into Maestro groups.
-      views = list_group_views
+      views = list_group_views.select { |view| filter(view, include_views, exclude_views) }
       logger.info "Found #{views.size} top level views in Jenkins to convert to groups"
 
       found_jobs = []
 
       views.each do |view|
+        view_jobs = jenkins_client.view.list_jobs(view).select { |job| filter(job, include_jobs, exclude_jobs) }
         details = view_details(view)
-        group = add_group_to_maestro(group_from_view(details))
+        if details['views'] || !view_jobs.empty?
+          group = add_group_to_maestro(group_from_view(details))
 
-        view_jobs = jenkins_client.view.list_jobs(view)
-        # Group has jobs, so we create it as a project and a group
-        unless view_jobs.empty?
-          found_jobs.concat view_jobs
+          # Group has jobs, so we create it as a project and a group
+          unless view_jobs.empty?
+            found_jobs.concat view_jobs
 
-          maestro_project = add_project_to_maestro(project_from_view(details))
-          add_project_to_group(maestro_project, group)
-          view_jobs.each do |job|
-            export_composition(job, maestro_project)
-          end
-        end
-
-        # Check for views regardless, even though the Nested Views plugin will only have views or jobs, not both
-        if details['views']
-          projects = export_projects(details['views'], group)
-          projects.each do |project|
-            project['compositions'].each do |composition|
-              found_jobs << composition['name']
+            maestro_project = add_project_to_maestro(project_from_view(details))
+            add_project_to_group(maestro_project, group)
+            view_jobs.each do |job|
+              export_composition(job, maestro_project)
             end
           end
+
+          # Check for views regardless, even though the Nested Views plugin will only have views or jobs, not both
+          if details['views']
+            projects = export_projects(details['views'], group)
+            projects.each do |project|
+              project['compositions'].each do |composition|
+                found_jobs << composition['name']
+              end
+            end
+          end
+        else
+          # Note, this will still include views that has all its subviews filtered
+          logger.info "Excluding view #{view} as it has no views or jobs after filtering"
         end
       end
 
-      orphaned_jobs = all_jobs - found_jobs
-      unless orphaned_jobs.empty?
-        logger.warn "There are #{orphaned_jobs.size} jobs not in any views: #{orphaned_jobs}"
+      if include_views || include_jobs || !exclude_views.empty? || !exclude_jobs.empty?
+        logger.info "Not creating orphaned projects as filters are in use"
+      else
+        orphaned_jobs = all_jobs - found_jobs
+        unless orphaned_jobs.empty?
+          logger.warn "There are #{orphaned_jobs.size} jobs not in any views: #{orphaned_jobs}"
 
-        maestro_project = add_project_to_maestro({'name' => 'Other Jenkins Jobs'})
-        orphaned_jobs.each do |job|
-          export_composition(job, maestro_project)
+          maestro_project = add_project_to_maestro({'name' => 'Other Jenkins Jobs'})
+          orphaned_jobs.each do |job|
+            export_composition(job, maestro_project)
+          end
         end
       end
     end
@@ -186,6 +195,22 @@ module MaestroJenkinsExporter
       @dryrun ||= @options['dryrun']
     end
 
+    def include_views
+      @include_views ||= @options['include_views']
+    end
+
+    def include_jobs
+      @include_jobs ||= @options['include_jobs']
+    end
+
+    def exclude_views
+      @exclude_views ||= @options['exclude_views'] || {}
+    end
+
+    def exclude_jobs
+      @exclude_jobs ||= @options['exclude_jobs'] || {}
+    end
+
 
     # Exports the projects from Jenkins and add to Maestro
     #
@@ -193,25 +218,53 @@ module MaestroJenkinsExporter
     # *group* a maestro group object to associate the new project with.
     #
     def export_projects(views, group)
-      logger.debug "Found #{views.size} views in view #{group['name']}"
+      views = views.select { |view| filter(view['name'], include_views, exclude_views) }
+      logger.info "Found #{views.size} views in view #{group['name']}"
 
       projects = []
 
       views.each do |view|
-        # Get the project details from Jenkins, create a maestro project, add it to Maestro and associate with a group
+        # Get the project details from Jenkins
         jenkins_project = view_details(view['name'], group['name'])
-        maestro_project = add_project_to_maestro(project_from_view(jenkins_project))
-        add_project_to_group(maestro_project, group)
+        jobs = jenkins_project['jobs'].select { |job| filter(job['name'], include_jobs, exclude_jobs) }
 
-        # Then we drill down each project and add all the compositions
-        export_compositions(jenkins_project['jobs'], maestro_project)
+        if jobs.empty?
+          logger.info "Excluding view #{view['name']} as it has no jobs after filtering"
+        else
+          # create a maestro project, add it to Maestro and associate with a group
+          maestro_project = add_project_to_maestro(project_from_view(jenkins_project))
+          add_project_to_group(maestro_project, group)
 
-        logger.warn "Additional nesting of views is not supported: #{jenkins_project['views']} in #{view['name']}" if jenkins_project['views']
+          # Then we drill down each project and add all the compositions
+          export_compositions(jobs, maestro_project)
 
-        projects << maestro_project
+          logger.warn "Additional nesting of views is not supported: #{jenkins_project['views']} in #{view['name']}" if jenkins_project['views']
+
+          projects << maestro_project
+        end
       end
 
       projects
+    end
+
+    def filter(item, includes, excludes)
+      excludes.each { |exclude|
+        if /^#{exclude}$/.match item
+          logger.debug "Excluding #{item} for pattern #{exclude}"
+          return false
+        end
+      }
+      if includes
+        includes.each { |include|
+          if /^#{include}$/.match item
+            logger.debug "Including #{item} for pattern #{include}"
+            return true
+          end
+        }
+        logger.debug "Excluding #{item} for no matching includes"
+        return false
+      end
+      true
     end
 
     # Given a list of jobs obtained from a Jenkins view, create maestro compositions, associate with given project,
