@@ -20,6 +20,7 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency('jenkins_api_client')
   gem.add_dependency('rest-client')
+  gem.add_development_dependency 'nokogiri', '>= 1.6.0'
   gem.add_development_dependency 'rspec', '~> 2.13.0'
   gem.add_development_dependency 'json_spec', '~> 1.1.1'
   gem.add_development_dependency 'warbler', '>=1.3.4'
