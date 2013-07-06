@@ -154,7 +154,11 @@ module MaestroJenkinsExporter
     end
 
     def notification_plugin_version
-      @plugin_version = @options['jenkins']['notification_plugin_version'] || "1.5"
+      @plugin_version ||= @options['jenkins']['notification_plugin_version'] || "1.5"
+    end
+
+    def disable_jenkins_hook
+      @disable_jenkins_hook ||= @options['jenkins']['disable_hook']
     end
 
     def maestro_client
@@ -291,7 +295,7 @@ module MaestroJenkinsExporter
       job_config = Nokogiri::XML(jenkins_client.job.get_config(job))
       add_composition_to_maestro(composition_from_job(job_details, job_config), project)
 
-      add_notification_plugin_to_job(job, job_config)
+      add_notification_plugin_to_job(job, job_config) unless disable_jenkins_hook
     end
 
     def add_notification_plugin_to_job(job, job_config)

@@ -8,6 +8,7 @@ jenkins:
   password: admin
   ssl: false
 #  notification_plugin_version: 1.5
+#  disable_hook: true
 sonar:
   source_name: Sonar
   url: http://localhost:9000
@@ -27,3 +28,15 @@ role_template:
 
 #verbose: true
 #dryrun: true
+
+#include_views:
+# - Good View
+
+#exclude_views:
+# - Bad View
+
+#include_jobs:
+# - Good Job
+
+#exclude_jobs:
+# - Bad Job
