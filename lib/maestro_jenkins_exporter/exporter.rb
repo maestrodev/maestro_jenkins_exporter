@@ -139,7 +139,7 @@ module MaestroJenkinsExporter
                              'username' => source['options']['username'],
                              'password' => source['options']['password'],
                              'ssl' => source['options']['use_ssl']
-          }
+          }.merge @options['jenkins']
         end
       end
       jenkins_options
