@@ -24,4 +24,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rspec', '~> 2.13.0'
   gem.add_development_dependency 'json_spec', '~> 1.1.1'
   gem.add_development_dependency 'warbler', '>=1.3.4'
+  gem.add_development_dependency 'rubyzip', '~>0.9' # until we can update to warbler with fixed dependency
 end
